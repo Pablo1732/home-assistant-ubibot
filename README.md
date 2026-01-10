@@ -31,6 +31,8 @@ This integration has only been tested with UbiBot WS1. Other models may work but
 ## Tips if something fails
 - “cannot_connect”: channel_id or key (api_key/read_key) incorrect.
 
+## Thanks to @ms32035 for the [code base.](https://github.com/ms32035/home-assistant-ubibot)
+
 ---
 #### Deutsch
 
@@ -61,3 +63,5 @@ Die Integration wurde nur mit den UbiBot WS1 getestet. Andere Modelle könnten f
 
 ## Tipps bei Problemen
 - „cannot_connect“: channel_id oder Schlüssel (api_key/read_key) falsch.
+
+## Danke an @ms32035 für die [Codebasis.](https://github.com/ms32035/home-assistant-ubibot)
