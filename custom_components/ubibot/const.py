@@ -1,11 +1,10 @@
 """Constants for Ubibot module."""
-from datetime import timedelta
 
 DOMAIN = "ubibot"
 PLATFORMS = ["sensor"]
 
 CONF_CHANNEL = "channel"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=900)
+DEFAULT_SCAN_INTERVAL = 900  # seconds
 
 SENSOR_TYPES = {
     "temperature": {
