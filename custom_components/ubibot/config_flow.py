@@ -7,13 +7,19 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, CONF_CHANNEL, DEFAULT_SCAN_INTERVAL
+from .const import DOMAIN, CONF_CHANNEL, DEFAULT_SCAN_INTERVAL, CONF_READ_KEY
 
 
-async def _async_validate_input(hass: HomeAssistant, api_key: str, channel: str) -> None:
-    """Validiere API-Key und Channel mit einem Probe-Request."""
+async def _async_validate_input(hass: HomeAssistant, api_key: str | None, read_key: str | None, channel: str) -> None:
+    """Validiere Account-Key oder Read-Key mit einem Probe-Request."""
     session = async_get_clientsession(hass)
-    url = f"https://api.ubibot.io/channels/{channel}?account_key={api_key}"
+    if api_key:
+        url = f"https://api.ubibot.io/channels/{channel}?account_key={api_key}"
+    elif read_key:
+        url = f"https://api.ubibot.io/channels/{channel}?read_key={read_key}"
+    else:
+        raise ValueError("missing_key")
+
     async with session.get(url, timeout=15) as resp:
         if resp.status != 200:
             raise ValueError(f"HTTP {resp.status}")
@@ -27,25 +33,28 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         errors = {}
         if user_input is not None:
-            api_key = user_input.get(CONF_API_KEY)
+            api_key = user_input.get(CONF_API_KEY) or None
+            read_key = user_input.get(CONF_READ_KEY) or None
             channel = user_input.get(CONF_CHANNEL)
             scan_interval = user_input.get("scan_interval", DEFAULT_SCAN_INTERVAL)
             try:
-                await _async_validate_input(self.hass, api_key, channel)
+                await _async_validate_input(self.hass, api_key, read_key, channel)
             except Exception:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(str(channel))
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=f"Ubibot {channel}", data={
-                    CONF_API_KEY: api_key,
-                    CONF_CHANNEL: channel,
-                    "scan_interval": scan_interval,
-                })
+                data = {CONF_CHANNEL: channel, "scan_interval": scan_interval}
+                if api_key:
+                    data[CONF_API_KEY] = api_key
+                if read_key:
+                    data[CONF_READ_KEY] = read_key
+                return self.async_create_entry(title=f"Ubibot {channel}", data=data)
 
         data_schema = vol.Schema({
-            vol.Required(CONF_API_KEY): str,
             vol.Required(CONF_CHANNEL): str,
+            vol.Optional(CONF_API_KEY): str,
+            vol.Optional(CONF_READ_KEY): str,
             vol.Optional("scan_interval", default=DEFAULT_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
         })
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)

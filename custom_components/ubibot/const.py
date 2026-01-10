@@ -4,6 +4,7 @@ DOMAIN = "ubibot"
 PLATFORMS = ["sensor"]
 
 CONF_CHANNEL = "channel"
+CONF_READ_KEY = "read_key"
 DEFAULT_SCAN_INTERVAL = 900  # seconds
 
 SENSOR_TYPES = {

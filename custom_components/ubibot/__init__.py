@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.const import CONF_API_KEY
 
-from .const import DOMAIN, PLATFORMS, CONF_CHANNEL, DEFAULT_SCAN_INTERVAL
+from .const import DOMAIN, PLATFORMS, CONF_CHANNEL, DEFAULT_SCAN_INTERVAL, CONF_READ_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,9 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 class UbibotCoordinator(DataUpdateCoordinator):
     """Coordinator für Ubibot API-Daten."""
 
-    def __init__(self, hass: HomeAssistant, api_key: str, channel: str, interval: timedelta) -> None:
+    def __init__(self, hass: HomeAssistant, api_key: str | None, read_key: str | None, channel: str, interval: timedelta) -> None:
         self._hass = hass
         self._api_key = api_key
+        self._read_key = read_key
         self._channel = channel
         self.data: dict[str, Any] | None = None
         super().__init__(
@@ -34,7 +35,12 @@ class UbibotCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Daten asynchron von der Ubibot API abrufen."""
         session = async_get_clientsession(self._hass)
-        url = f"https://api.ubibot.io/channels/{self._channel}?account_key={self._api_key}"
+        if self._api_key:
+            url = f"https://api.ubibot.io/channels/{self._channel}?account_key={self._api_key}"
+        elif self._read_key:
+            url = f"https://api.ubibot.io/channels/{self._channel}?read_key={self._read_key}"
+        else:
+            raise UpdateFailed("Missing credentials: api_key or read_key")
         try:
             async with session.get(url, timeout=20) as resp:
                 if resp.status != 200:
@@ -54,7 +60,8 @@ class UbibotCoordinator(DataUpdateCoordinator):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Richte einen Ubibot ConfigEntry ein."""
-    api_key: str = entry.data[CONF_API_KEY]
+    api_key: str | None = entry.data.get(CONF_API_KEY)
+    read_key: str | None = entry.data.get(CONF_READ_KEY)
     channel: str = entry.data[CONF_CHANNEL]
     # Reihenfolge: Optionen > Entry-Daten > Default
     scan_interval_sec: int = entry.options.get("scan_interval", entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL))
@@ -66,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = UbibotCoordinator(
         hass,
         api_key,
+        read_key,
         channel,
         timedelta(seconds=scan_interval_sec),
     )
@@ -78,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "coordinator": coordinator,
         "api_key": api_key,
+        "read_key": read_key,
         "channel": channel,
     }
 
