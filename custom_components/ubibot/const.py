@@ -31,6 +31,12 @@ SENSOR_TYPES = {
         "icon": "mdi:wifi",
         "field": "field5",
     },
+    "temperature_external": {
+        "class": "temperature",
+        "unit": "°C",
+        "icon": "mdi:thermometer-probe",
+        "field": "field8",
+    },
 }
 
 MODELS = {"ubibot-ws1": "WS1"}

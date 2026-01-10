@@ -19,8 +19,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
     channel: str = data["channel"]
 
     entities: list[UbibotSensor] = []
-    for sensor_type in SENSOR_TYPES.keys():
-        entities.append(UbibotSensor(coordinator, sensor_type, channel))
+    # Erzeuge nur Sensoren, deren Feld im last_values vorhanden ist
+    last_values = (coordinator.data or {}).get("channel", {}).get("last_values", {})
+    for sensor_type, meta in SENSOR_TYPES.items():
+        field = meta["field"]
+        if field in last_values:
+            entities.append(UbibotSensor(coordinator, sensor_type, channel))
+        else:
+            _LOGGER.debug("Skipping sensor %s (field %s not present)", sensor_type, field)
 
     async_add_entities(entities)
 
