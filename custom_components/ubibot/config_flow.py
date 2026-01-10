@@ -14,15 +14,15 @@ AUTH_METHOD_ACCOUNT = "account_key"
 AUTH_METHOD_READ = "read_key"
 
 
-async def _async_validate_input(hass: HomeAssistant, api_key: str | None, read_key: str | None, channel: str) -> None:
-    """Validiere Account-Key oder Read-Key mit einem Probe-Request."""
+async def _async_validate_input(hass: HomeAssistant, auth_method: str, key_value: str, channel: str) -> None:
+    """Validiere den angegebenen Schlüssel (Account oder Read) mit einem Probe-Request."""
     session = async_get_clientsession(hass)
-    if api_key:
-        url = f"https://api.ubibot.io/channels/{channel}?account_key={api_key}"
-    elif read_key:
-        url = f"https://webapi.ubibot.com/channels/{channel}?api_key={read_key}"
+    if auth_method == AUTH_METHOD_ACCOUNT:
+        url = f"https://api.ubibot.io/channels/{channel}?account_key={key_value}"
+    elif auth_method == AUTH_METHOD_READ:
+        url = f"https://webapi.ubibot.com/channels/{channel}?api_key={key_value}"
     else:
-        raise ValueError("missing_key")
+        raise ValueError("invalid_auth_method")
 
     async with session.get(url, timeout=15) as resp:
         if resp.status != 200:
@@ -34,53 +34,44 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        self._auth_method: str = AUTH_METHOD_ACCOUNT
+
     async def async_step_user(self, user_input=None):
         errors = {}
-        if user_input is not None:
-            auth_method = user_input.get("auth_method", AUTH_METHOD_ACCOUNT)
-            channel = user_input.get(CONF_CHANNEL)
-            scan_interval = user_input.get("scan_interval", DEFAULT_SCAN_INTERVAL)
-            api_key = None
-            read_key = None
-            if auth_method == AUTH_METHOD_ACCOUNT:
-                api_key = user_input.get(CONF_API_KEY)
-                if not api_key:
-                    errors[CONF_API_KEY] = "required"
-            elif auth_method == AUTH_METHOD_READ:
-                read_key = user_input.get(CONF_READ_KEY)
-                if not read_key:
-                    errors[CONF_READ_KEY] = "required"
-            else:
-                errors["base"] = "invalid_auth_method"
+        auth_selected = (user_input or {}).get("auth_method", self._auth_method)
+        channel = (user_input or {}).get(CONF_CHANNEL)
+        scan_interval = (user_input or {}).get("scan_interval", DEFAULT_SCAN_INTERVAL)
+        key_value = (user_input or {}).get(CONF_API_KEY)
 
-            if not errors:
+        if user_input is not None:
+            self._auth_method = auth_selected
+            if not channel:
+                errors[CONF_CHANNEL] = "required"
+            elif not key_value:
+                errors[CONF_API_KEY] = "required"
+            else:
                 try:
-                    await _async_validate_input(self.hass, api_key, read_key, channel)
+                    await _async_validate_input(self.hass, auth_selected, key_value, channel)
                 except Exception:
                     errors["base"] = "cannot_connect"
                 else:
                     await self.async_set_unique_id(str(channel))
                     self._abort_if_unique_id_configured()
                     data = {CONF_CHANNEL: channel, "scan_interval": scan_interval}
-                    if api_key:
-                        data[CONF_API_KEY] = api_key
-                    if read_key:
-                        data[CONF_READ_KEY] = read_key
+                    if auth_selected == AUTH_METHOD_ACCOUNT:
+                        data[CONF_API_KEY] = key_value
+                    else:
+                        data[CONF_READ_KEY] = key_value
                     return self.async_create_entry(title=f"Ubibot {channel}", data=data)
 
-        # Dropdown für Auth-Methode und bedingte Felder
-        auth_default = (user_input or {}).get("auth_method", AUTH_METHOD_ACCOUNT)
-        base_schema = {
-            vol.Required("auth_method", default=auth_default): vol.In({AUTH_METHOD_ACCOUNT: "Account Key", AUTH_METHOD_READ: "Read Key"}),
-            vol.Required(CONF_CHANNEL, default=(user_input or {}).get(CONF_CHANNEL, "")): str,
-            vol.Optional("scan_interval", default=(user_input or {}).get("scan_interval", DEFAULT_SCAN_INTERVAL)): vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
-        }
-        if auth_default == AUTH_METHOD_READ:
-            base_schema[vol.Required(CONF_READ_KEY, default=(user_input or {}).get(CONF_READ_KEY, ""))] = str
-        else:
-            base_schema[vol.Required(CONF_API_KEY, default=(user_input or {}).get(CONF_API_KEY, ""))] = str
-
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(base_schema), errors=errors)
+        schema = vol.Schema({
+            vol.Required("auth_method", default=self._auth_method): vol.In({AUTH_METHOD_ACCOUNT: "Account Key", AUTH_METHOD_READ: "Read Key"}),
+            vol.Required(CONF_CHANNEL, default=channel or ""): str,
+            vol.Required(CONF_API_KEY, default=key_value or ""): str,
+            vol.Optional("scan_interval", default=scan_interval): vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
+        })
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_import(self, user_input=None):
         # Falls YAML Import (Altbestand) vorhanden ist, mappe auf neuen Flow
@@ -102,6 +93,5 @@ class UbibotOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=options_schema)
 
 
-# HA erwartet die Options-Flow-Fabrikfunktion auf Modulebene
 def async_get_options_flow(config_entry: config_entries.ConfigEntry):
     return UbibotOptionsFlowHandler(config_entry)
