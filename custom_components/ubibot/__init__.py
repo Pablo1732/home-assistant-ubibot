@@ -59,6 +59,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Reihenfolge: Optionen > Entry-Daten > Default
     scan_interval_sec: int = entry.options.get("scan_interval", entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL))
 
+    # Falls bisher keine Optionen gesetzt sind, initialisiere sie
+    if not entry.options or "scan_interval" not in entry.options:
+        hass.config_entries.async_update_entry(entry, options={"scan_interval": scan_interval_sec})
+
     coordinator = UbibotCoordinator(
         hass,
         api_key,
