@@ -1,44 +1,63 @@
-# Ubibot Integration für Home Assistant
+# [English](#english) | [Deutsch](#deutsch)
 
-Diese Custom Integration bindet Ubibot Thermometer/WS1-Kanäle als Sensoren in Home Assistant ein. Die Integration wurde auf den aktuellen Home Assistant-Standard (UI-Konfiguration, asynchrone Datenabfrage, DataUpdateCoordinator) modernisiert.
+---
+#### English
+
+# UbiBot Integration for HomeAssistant
+
+This integration has only been tested with UbiBot WS1. Other models may work but are untested.
 
 ## Installation
+- Add the repository (https://github.com/Pablo1732/home-assistant-ubibot) to HACS [(guide)](https://hacs.xyz/docs/faq/custom_repositories/)
+- Install the UbiBot integration via HACS
+- Restart Home Assistant
 
-- Empfohlen: Installation über HACS (Home Assistant Community Store).
-- Alternativ: Kopiere den Ordner `custom_components/ubibot` in deinen Home Assistant `config/custom_components`-Pfad und starte Home Assistant neu.
+## Setup
+1. Open Home Assistant → Settings → Devices & Services → “Add Integration” → “Ubibot”.
+2. Enter:
+   - channel: your channel ID from the Ubibot Cloud or App.
+   - auth_method: see below.
+   - api_key: depending on your selection, enter the matching key (Account Key or Read Key).
+   - scan_interval: how often to refresh in seconds (recommendation: 300 seconds).
+3. Done – sensors will appear automatically.
 
-## Einrichtung (UI)
+## Account Key or Read Key?
+- [Account Key:](https://www.ubibot.com/platform-api/1188/generate-account-key/) Grants access to your entire **UbiBot account** → **less secure** (found in your account settings)
+- [Read Key:](https://www.ubibot.com/platform-api/1195/generate-channel-read-key/) Grants **read-only access to a single device/channel** → **more secure**
 
-1. Öffne Home Assistant → Einstellungen → Geräte & Dienste → Integration hinzufügen.
-2. Suche nach "Ubibot" und wähle die Integration aus.
-3. Gib deinen Ubibot `API Key` und die `Channel`-ID ein und bestätige.
-4. Optional kannst du im Options-Dialog das `scan_interval` (Aktualisierungsintervall in Sekunden) anpassen.
+## External temperature probe
+- If a probe is connected and provides data, the “External Temperature” sensor appears automatically.
 
-Nach der Einrichtung werden folgende Sensoren erzeugt (falls vom Gerät bereitgestellt):
-- Temperatur (°C)
-- Luftfeuchtigkeit (%)
-- Beleuchtungsstärke (lx)
-- WLAN RSSI (dBm)
+## Tips if something fails
+- “cannot_connect”: channel_id or key (api_key/read_key) incorrect.
 
-## Optionen
+---
+#### Deutsch
 
-- `scan_interval` (Standard: 900 Sekunden) steuert das Abfrageintervall der Cloud-API.
+# UbiBot Integration für HomeAssistant
 
-## Migration von YAML
+Die Integration wurde nur mit den UbiBot WS1 getestet. Andere Modelle könnten funktionieren, sind aber ungetestet.
 
-Die frühere YAML-Konfiguration (`sensor: platform: ubibot ...`) ist nicht mehr erforderlich und wird nicht mehr unterstützt. Entferne alte YAML-Einträge aus `configuration.yaml` und richte die Integration über die UI neu ein.
+## Installation
+- Repository (https://github.com/Pablo1732/home-assistant-ubibot) zu HACS hinzufügen [(Anleitung)](https://hacs.xyz/docs/faq/custom_repositories/)
+- UbiBot Integration über HACS installieren
+- Home Assistant neu starten
 
-## Fehlerbehebung
+## Einrichtung
+1. Öffne Home Assistant → Einstellungen → Geräte & Dienste → „Integration hinzufügen“ → „Ubibot“.
+2. Gib ein:
+   - channel: deine Kanal‑ID aus der Ubibot Cloud oder App.
+   - auth_method: Siehe unten.
+   - api_key: Je nach Auswahl gib hier den passenden Schlüssel ein (Account‑Key oder Read‑Key).
+   - scan_interval: Gibt in Sekunden an, wie oft die Daten aktualisiert werden sollen (Empfehlung: 300 Sekunden).
+3. Fertig – die Sensoren erscheinen automatisch.
 
-- "Kann keine Verbindung herstellen": Prüfe API Key und Channel-ID und ob der Ubibot-Clouddienst erreichbar ist.
-- Leere Sensorwerte: Möglicherweise liefert der Kanal keine aktuellen Messwerte; prüfe die Ubibot-App/Weboberfläche.
-- Rate Limit/429: Das Abfrageintervall ggf. erhöhen.
+## Account-Key oder Read-Key?
+- [Account Key:](https://www.ubibot.com/platform-api/1188/generate-account-key/) Ermöglicht Zugriff auf dein **ganzes UbiBot Konto** → **sehr unsicher** (findest du in den Account‑Einstellungen)
+- [Read Key:](https://www.ubibot.com/platform-api/1195/generate-channel-read-key/) Ermöglicht nur **Zugriff auf ein bestimmtes Gerät**/Kanal → **sicherer**
 
-## Hinweise
+## Externe Temperatursonde
+- Wenn eine Sonde angeschlossen ist und Daten liefert, erscheint der Sensor „Externe Temperatur“ automatisch.
 
-- Die Integration ruft die Ubibot Cloud-API periodisch ab und ist daher als `cloud_polling` klassifiziert.
-- Bei mehreren Kanälen lege jeweils einen separaten Integrationseintrag an.
-
-## Lizenz und Support
-
-Dieses Projekt ist Community-getrieben. Issues und Beiträge sind willkommen: https://github.com/ms32035/home-assistant-ubibot/issues
+## Tipps bei Problemen
+- „cannot_connect“: channel_id oder Schlüssel (api_key/read_key) falsch.

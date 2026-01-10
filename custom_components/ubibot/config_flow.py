@@ -10,6 +10,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN, CONF_CHANNEL, DEFAULT_SCAN_INTERVAL, CONF_READ_KEY
 
 
+AUTH_METHOD_ACCOUNT = "account_key"
+AUTH_METHOD_READ = "read_key"
+
+
 async def _async_validate_input(hass: HomeAssistant, api_key: str | None, read_key: str | None, channel: str) -> None:
     """Validiere Account-Key oder Read-Key mit einem Probe-Request."""
     session = async_get_clientsession(hass)
@@ -33,31 +37,50 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         errors = {}
         if user_input is not None:
-            api_key = user_input.get(CONF_API_KEY) or None
-            read_key = user_input.get(CONF_READ_KEY) or None
+            auth_method = user_input.get("auth_method", AUTH_METHOD_ACCOUNT)
             channel = user_input.get(CONF_CHANNEL)
             scan_interval = user_input.get("scan_interval", DEFAULT_SCAN_INTERVAL)
-            try:
-                await _async_validate_input(self.hass, api_key, read_key, channel)
-            except Exception:
-                errors["base"] = "cannot_connect"
+            api_key = None
+            read_key = None
+            if auth_method == AUTH_METHOD_ACCOUNT:
+                api_key = user_input.get(CONF_API_KEY)
+                if not api_key:
+                    errors[CONF_API_KEY] = "required"
+            elif auth_method == AUTH_METHOD_READ:
+                read_key = user_input.get(CONF_READ_KEY)
+                if not read_key:
+                    errors[CONF_READ_KEY] = "required"
             else:
-                await self.async_set_unique_id(str(channel))
-                self._abort_if_unique_id_configured()
-                data = {CONF_CHANNEL: channel, "scan_interval": scan_interval}
-                if api_key:
-                    data[CONF_API_KEY] = api_key
-                if read_key:
-                    data[CONF_READ_KEY] = read_key
-                return self.async_create_entry(title=f"Ubibot {channel}", data=data)
+                errors["base"] = "invalid_auth_method"
 
-        data_schema = vol.Schema({
-            vol.Required(CONF_CHANNEL): str,
-            vol.Optional(CONF_API_KEY): str,
-            vol.Optional(CONF_READ_KEY): str,
-            vol.Optional("scan_interval", default=DEFAULT_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
-        })
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
+            if not errors:
+                try:
+                    await _async_validate_input(self.hass, api_key, read_key, channel)
+                except Exception:
+                    errors["base"] = "cannot_connect"
+                else:
+                    await self.async_set_unique_id(str(channel))
+                    self._abort_if_unique_id_configured()
+                    data = {CONF_CHANNEL: channel, "scan_interval": scan_interval}
+                    if api_key:
+                        data[CONF_API_KEY] = api_key
+                    if read_key:
+                        data[CONF_READ_KEY] = read_key
+                    return self.async_create_entry(title=f"Ubibot {channel}", data=data)
+
+        # Dropdown für Auth-Methode und bedingte Felder
+        auth_default = (user_input or {}).get("auth_method", AUTH_METHOD_ACCOUNT)
+        base_schema = {
+            vol.Required("auth_method", default=auth_default): vol.In({AUTH_METHOD_ACCOUNT: "Account Key", AUTH_METHOD_READ: "Read Key"}),
+            vol.Required(CONF_CHANNEL, default=(user_input or {}).get(CONF_CHANNEL, "")): str,
+            vol.Optional("scan_interval", default=(user_input or {}).get("scan_interval", DEFAULT_SCAN_INTERVAL)): vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
+        }
+        if auth_default == AUTH_METHOD_READ:
+            base_schema[vol.Required(CONF_READ_KEY, default=(user_input or {}).get(CONF_READ_KEY, ""))] = str
+        else:
+            base_schema[vol.Required(CONF_API_KEY, default=(user_input or {}).get(CONF_API_KEY, ""))] = str
+
+        return self.async_show_form(step_id="user", data_schema=vol.Schema(base_schema), errors=errors)
 
     async def async_step_import(self, user_input=None):
         # Falls YAML Import (Altbestand) vorhanden ist, mappe auf neuen Flow
