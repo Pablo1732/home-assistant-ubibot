@@ -16,7 +16,7 @@ async def _async_validate_input(hass: HomeAssistant, api_key: str | None, read_k
     if api_key:
         url = f"https://api.ubibot.io/channels/{channel}?account_key={api_key}"
     elif read_key:
-        url = f"https://api.ubibot.io/channels/{channel}?read_key={read_key}"
+        url = f"https://webapi.ubibot.com/channels/{channel}?api_key={read_key}"
     else:
         raise ValueError("missing_key")
 

@@ -36,9 +36,11 @@ class UbibotCoordinator(DataUpdateCoordinator):
         """Daten asynchron von der Ubibot API abrufen."""
         session = async_get_clientsession(self._hass)
         if self._api_key:
+            # Account-Key Endpoint
             url = f"https://api.ubibot.io/channels/{self._channel}?account_key={self._api_key}"
         elif self._read_key:
-            url = f"https://api.ubibot.io/channels/{self._channel}?read_key={self._read_key}"
+            # Read-Key Endpoint benötigt webapi und Parameter api_key
+            url = f"https://webapi.ubibot.com/channels/{self._channel}?api_key={self._read_key}"
         else:
             raise UpdateFailed("Missing credentials: api_key or read_key")
         try:
