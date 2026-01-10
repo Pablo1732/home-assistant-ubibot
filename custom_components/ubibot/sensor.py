@@ -19,14 +19,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     channel: str = data["channel"]
 
     entities: list[UbibotSensor] = []
-    # Erzeuge nur Sensoren, deren Feld im last_values vorhanden ist
-    last_values = (coordinator.data or {}).get("channel", {}).get("last_values", {})
-    for sensor_type, meta in SENSOR_TYPES.items():
-        field = meta["field"]
-        if field in last_values:
-            entities.append(UbibotSensor(coordinator, sensor_type, channel))
-        else:
-            _LOGGER.debug("Skipping sensor %s (field %s not present)", sensor_type, field)
+    # Erzeuge alle Sensoren; Verfügbarkeit wird dynamisch geprüft
+    for sensor_type in SENSOR_TYPES.keys():
+        entities.append(UbibotSensor(coordinator, sensor_type, channel))
 
     async_add_entities(entities)
 
@@ -45,6 +40,13 @@ class UbibotSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = SENSOR_TYPES[self._type]["unit"]
         self._attr_icon = SENSOR_TYPES[self._type]["icon"]
         self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def available(self) -> bool:
+        data = self.coordinator.data or {}
+        last_values = data.get("channel", {}).get("last_values", {})
+        field = SENSOR_TYPES[self._type]["field"]
+        return field in last_values and last_values.get(field) is not None
 
     @property
     def native_value(self) -> Any:
