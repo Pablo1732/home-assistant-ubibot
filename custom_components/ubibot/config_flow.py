@@ -29,6 +29,7 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             api_key = user_input.get(CONF_API_KEY)
             channel = user_input.get(CONF_CHANNEL)
+            scan_interval = user_input.get("scan_interval", DEFAULT_SCAN_INTERVAL)
             try:
                 await _async_validate_input(self.hass, api_key, channel)
             except Exception:
@@ -39,11 +40,13 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=f"Ubibot {channel}", data={
                     CONF_API_KEY: api_key,
                     CONF_CHANNEL: channel,
+                    "scan_interval": scan_interval,
                 })
 
         data_schema = vol.Schema({
             vol.Required(CONF_API_KEY): str,
             vol.Required(CONF_CHANNEL): str,
+            vol.Optional("scan_interval", default=DEFAULT_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
         })
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
@@ -60,9 +63,9 @@ class UbibotOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="Options", data=user_input)
 
+        current = self.config_entry.options.get("scan_interval", self.config_entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL))
         options_schema = vol.Schema({
-            vol.Required("scan_interval", default=self.config_entry.options.get("scan_interval", DEFAULT_SCAN_INTERVAL)):
-                vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
+            vol.Required("scan_interval", default=current): vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
         })
         return self.async_show_form(step_id="init", data_schema=options_schema)
 

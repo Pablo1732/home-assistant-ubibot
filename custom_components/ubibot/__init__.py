@@ -56,7 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Richte einen Ubibot ConfigEntry ein."""
     api_key: str = entry.data[CONF_API_KEY]
     channel: str = entry.data[CONF_CHANNEL]
-    scan_interval_sec: int = entry.options.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+    # Reihenfolge: Optionen > Entry-Daten > Default
+    scan_interval_sec: int = entry.options.get("scan_interval", entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL))
 
     coordinator = UbibotCoordinator(
         hass,
