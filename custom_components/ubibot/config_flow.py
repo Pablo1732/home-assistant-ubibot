@@ -71,5 +71,5 @@ class UbibotOptionsFlowHandler(config_entries.OptionsFlow):
 
 
 # HA erwartet die Options-Flow-Fabrikfunktion auf Modulebene
-async def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+def async_get_options_flow(config_entry: config_entries.ConfigEntry):
     return UbibotOptionsFlowHandler(config_entry)
