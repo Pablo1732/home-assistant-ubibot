@@ -6,5 +6,5 @@
   "codeowners": ["@ms32035", "@Pablo1732"],
   "iot_class": "cloud_polling",
   "config_flow": true,
-  "version": "0.4.6"
+  "version": "0.4.5"
 }
