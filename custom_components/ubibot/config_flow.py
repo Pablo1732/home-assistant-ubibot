@@ -51,9 +51,6 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Falls YAML Import (Altbestand) vorhanden ist, mappe auf neuen Flow
         return await self.async_step_user(user_input)
 
-    def async_get_options_flow(self, config_entry):
-        return UbibotOptionsFlowHandler(config_entry)
-
 
 class UbibotOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
@@ -68,3 +65,8 @@ class UbibotOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.All(vol.Coerce(int), vol.Range(min=60, max=3600)),
         })
         return self.async_show_form(step_id="init", data_schema=options_schema)
+
+
+# HA erwartet die Options-Flow-Fabrikfunktion auf Modulebene
+async def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+    return UbibotOptionsFlowHandler(config_entry)
