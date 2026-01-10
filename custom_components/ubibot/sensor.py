@@ -1,140 +1,69 @@
-"""Ubibot sensor."""
+"""Ubibot sensor (async, coordinator-based)."""
 
-from datetime import datetime
-import json
+from __future__ import annotations
+
 import logging
-import threading
+from typing import Any
 
-import requests
-
-from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_CHANNEL
-from .const import SENSOR_TYPES, MODELS
+from .const import SENSOR_TYPES, MODELS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Ubibot sensor setup."""
+async def async_setup_entry(hass, entry, async_add_entities):
+    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = data["coordinator"]
+    channel: str = data["channel"]
 
-    api_key = config.get(CONF_API_KEY)
-    channel = config.get(CONF_CHANNEL)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
+    entities: list[UbibotSensor] = []
+    for sensor_type in SENSOR_TYPES.keys():
+        entities.append(UbibotSensor(coordinator, sensor_type, channel))
 
-    ubibot_data = UbibotData(api_key, channel, scan_interval)
-
-    for t in SENSOR_TYPES.keys():
-        add_devices([UbibotSensor(t, channel, ubibot_data)])
+    async_add_entities(entities)
 
 
-class UbibotSensor(SensorEntity):
-    """Representation of a Sensor."""
+class UbibotSensor(CoordinatorEntity, SensorEntity):
+    """Representation of a Ubibot Sensor."""
 
-    def __init__(self, sensor_type, channel, ubibot_data):
-        """Initialize the sensor."""
+    def __init__(self, coordinator, sensor_type: str, channel: str) -> None:
+        super().__init__(coordinator)
         self._type = sensor_type
         self._channel = channel
-        self._ubibot_data = ubibot_data
-        self._state = self._ubibot_data.data["channel"]["last_values"][
-            SENSOR_TYPES[self._type]["field"]
-        ]["value"]
+        self._attr_name = f"Ubibot - {channel} - {sensor_type}"
+        self._attr_unique_id = f"{channel}_{sensor_type}"
+        # map device class and unit
+        self._attr_device_class = SENSOR_TYPES[self._type]["class"]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[self._type]["unit"]
+        self._attr_icon = SENSOR_TYPES[self._type]["icon"]
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Ubibot - {self._channel} - {self._type}"
-
-    @property
-    def native_value(self):
-        """Return the native value of the sensor."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return SENSOR_TYPES[self._type]["class"]
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the native unit of measurement."""
-        return SENSOR_TYPES[self._type]["unit"]
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return SENSOR_TYPES[self._type]["icon"]
-
-    @property
-    def unique_id(self) -> [str]:
-        """Return the icon."""
-        return f"{self._channel}_{self._type}"
-
-    def update(self):
-        """Fetch new state data for the sensor."""
-        self._ubibot_data.update()
-        self._state = self._ubibot_data.data["channel"]["last_values"][
-            SENSOR_TYPES[self._type]["field"]
-        ]["value"]
-
-    @property
-    def state_class(self):
-        """Return sensor state class"""
-        return SensorStateClass.MEASUREMENT
+    def native_value(self) -> Any:
+        data = self.coordinator.data
+        if not data:
+            return None
+        try:
+            return data["channel"]["last_values"][SENSOR_TYPES[self._type]["field"]][
+                "value"
+            ]
+        except Exception as exc:
+            _LOGGER.debug("Value read error: %s", exc)
+            return None
 
     @property
     def device_info(self):
-        """Return device"""
+        data = self.coordinator.data or {}
+        channel_info = data.get("channel", {})
+        full_serial = channel_info.get("full_serial")
+        product_id = channel_info.get("product_id")
+        firmware = channel_info.get("firmware")
         return {
-            "identifiers": {
-                ("ubibot", self._ubibot_data.data["channel"]["full_serial"])
-            },
-            "name": self._ubibot_data.data["channel"]["full_serial"],
-            "firmware": self._ubibot_data.data["channel"]["firmware"],
+            "identifiers": {(DOMAIN, full_serial)} if full_serial else None,
+            "name": full_serial,
             "manufacturer": "Ubibot",
-            "model": MODELS[self._ubibot_data.data["channel"]["product_id"]],
+            "model": MODELS.get(product_id, str(product_id)),
+            "sw_version": firmware,
         }
-
-
-class UbibotData:
-    """Ubibot data object."""
-
-    URL = "https://api.ubibot.io/channels/{0}?account_key={1}"
-
-    def __init__(self, account_key, channel, scan_interval):
-        """
-        Initialize the UniFi Ubibot data object.
-
-        :param account_key: Ubibot Account Key
-        :param channel: Channel ID
-        :param scan_interval: refresh interval in seconds
-        """
-        self.account_key = account_key
-        self.channel = channel
-        self.scan_interval = scan_interval
-        self.last_refresh = datetime(2000, 1, 1)
-        self.data = None
-        self._update_in_progress = threading.Lock()
-        self.update()
-
-    def update(self):
-        """Get data from Ubibot API."""
-        if (
-            datetime.now() < self.last_refresh + self.scan_interval
-            or not self._update_in_progress.acquire(False)
-        ):
-            return
-        try:
-            url = UbibotData.URL.format(self.channel, self.account_key)
-            r = requests.get(url)
-            if r.status_code == 200:
-                self.data = json.loads(r.text)
-                self.data["channel"]["last_values"] = json.loads(
-                    self.data["channel"]["last_values"]
-                )
-            else:
-                _LOGGER.error(r.status_code)
-            self.last_refresh = datetime.now()
-        finally:
-            self._update_in_progress.release()

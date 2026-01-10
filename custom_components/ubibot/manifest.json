@@ -7,5 +7,7 @@
   "dependencies": [],
   "codeowners": ["@ms32035"],
   "iot_class": "cloud_polling",
-  "version": "0.3.0"
+  "config_flow": true,
+  "version": "0.3.0",
+  "translation_key": "ubibot"
 }

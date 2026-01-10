@@ -1,35 +1,34 @@
 """Constants for Ubibot module."""
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    TEMP_CELSIUS,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-)
+from datetime import timedelta
+
+DOMAIN = "ubibot"
+PLATFORMS = ["sensor"]
+
+CONF_CHANNEL = "channel"
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=900)
 
 SENSOR_TYPES = {
     "temperature": {
-        "class": DEVICE_CLASS_TEMPERATURE,
-        "unit": TEMP_CELSIUS,
+        "class": "temperature",
+        "unit": "°C",
         "icon": "mdi:thermometer",
         "field": "field1",
     },
     "humidity": {
-        "class": DEVICE_CLASS_HUMIDITY,
+        "class": "humidity",
         "unit": "%",
         "icon": "mdi:water-percent",
         "field": "field2",
     },
     "lux": {
-        "class": DEVICE_CLASS_ILLUMINANCE,
-        "unit": "lux",
+        "class": "illuminance",
+        "unit": "lx",
         "icon": "mdi:lightbulb-on-outline",
         "field": "field3",
     },
     "wifi_rssi": {
-        "class": DEVICE_CLASS_SIGNAL_STRENGTH,
-        "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        "class": "signal_strength",
+        "unit": "dBm",
         "icon": "mdi:wifi",
         "field": "field5",
     },
