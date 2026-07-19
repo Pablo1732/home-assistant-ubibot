@@ -12,8 +12,9 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.const import CONF_API_KEY
 
@@ -32,6 +33,19 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config) -> bool:
+    """Beim Start prüfen: ist der YAML-Block weg, die Import-Reparaturmeldung löschen."""
+
+    @callback
+    def _cleanup_yaml_issue(hass: HomeAssistant) -> None:
+        # async_setup_platform setzt das Flag, wenn YAML noch vorhanden ist.
+        if not hass.data.get(DOMAIN, {}).get("yaml_seen"):
+            ir.async_delete_issue(hass, DOMAIN, "yaml_import")
+
+    async_at_started(hass, _cleanup_yaml_issue)
+    return True
 
 
 class UbibotCoordinator(DataUpdateCoordinator):

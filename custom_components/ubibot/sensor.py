@@ -25,6 +25,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     darauf hin, den YAML-Block zu entfernen. Doppelte Anlage wird im Import
     verhindert -> keine doppelten Entitäten, egal in welcher Reihenfolge.
     """
+    # Flag für async_setup: YAML ist (noch) vorhanden -> Meldung nicht löschen.
+    hass.data.setdefault(DOMAIN, {})["yaml_seen"] = True
     ir.async_create_issue(
         hass,
         DOMAIN,
