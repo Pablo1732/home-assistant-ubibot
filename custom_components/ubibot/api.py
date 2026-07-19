@@ -7,6 +7,7 @@ danach verworfen – gespeichert wird in Home Assistant nur der Read-Key.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import aiohttp
@@ -40,7 +41,7 @@ async def _request_json(session: aiohttp.ClientSession, url: str, method: str = 
                 return await resp.json()
             except (aiohttp.ContentTypeError, ValueError) as exc:
                 raise UbibotError(f"Invalid JSON: {exc}") from exc
-    except aiohttp.ClientError as exc:
+    except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
         raise UbibotError(f"Connection error: {exc}") from exc
 
 

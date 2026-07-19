@@ -221,8 +221,13 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await api.async_list_channels(self.hass, key_value)
             is_account = True
-        except api.UbibotError:
+        except api.UbibotAuthError:
+            # Definitiv kein Account-Key -> als Read-Key behandeln.
             is_account = False
+        except api.UbibotError:
+            # Verbindungs-/sonstiger Fehler -> nicht als Read-Key fehldeuten.
+            errors["base"] = "cannot_connect"
+            return None
 
         if is_account:
             try:

@@ -79,11 +79,12 @@ class UbibotSensor(CoordinatorEntity, SensorEntity):
         channel_info = (self.coordinator.data or {}).get("channel", {})
         full_serial = channel_info.get("full_serial")
         product_id = channel_info.get("product_id")
-        # Immer eine gültige Identifier-Menge: bevorzugt Seriennummer,
-        # sonst die (stets vorhandene) Channel-ID -> kein "identifiers: None".
+        # Stabiler Identifier: immer die Channel-ID (auch verfügbar, wenn noch
+        # keine Daten geladen sind) -> das Gerät "wandert" nie. Seriennummer nur
+        # als serial_number.
         name = channel_info.get("name") or full_serial or f"Ubibot {self._channel}"
         return DeviceInfo(
-            identifiers={(DOMAIN, full_serial or self._channel)},
+            identifiers={(DOMAIN, self._channel)},
             name=name,
             manufacturer="Ubibot",
             model=MODELS.get(product_id, str(product_id) if product_id else None),
