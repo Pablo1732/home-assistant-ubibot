@@ -10,7 +10,7 @@ from urllib.parse import quote
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -210,8 +210,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"coordinators": coordinators}
 
+    # Falls noch ein Account-Key gespeichert ist (Upgrade beim Setup nicht möglich,
+    # z. B. offline): nach jedem erfolgreichen Abruf erneut versuchen -> migriert
+    # automatisch, sobald online, ohne Neustart.
+    _setup_account_key_upgrade(hass, entry, coordinators)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+def _setup_account_key_upgrade(
+    hass: HomeAssistant, entry: ConfigEntry, coordinators: dict[str, "UbibotCoordinator"]
+) -> None:
+    """Ausstehende Account-Key->Read-Key-Upgrades im laufenden Betrieb nachholen."""
+
+    def _pending() -> bool:
+        return any(
+            record.get(CONF_ACCOUNT_KEY) and not record.get(CONF_READ_KEY)
+            for record in entry.data.get(CONF_CHANNELS, {}).values()
+        )
+
+    if not _pending():
+        return
+
+    state = {"running": False}
+
+    async def _try_upgrade() -> None:
+        if state["running"] or not _pending():
+            return
+        state["running"] = True
+        try:
+            await _async_upgrade_account_keys(
+                hass, entry, dict(entry.data.get(CONF_CHANNELS, {}))
+            )
+        finally:
+            state["running"] = False
+
+    def _make_listener(coordinator: "UbibotCoordinator"):
+        @callback
+        def _on_update() -> None:
+            # Nur nach einem erfolgreichen Abruf (online) und solange noch offen.
+            if coordinator.last_update_success and _pending():
+                hass.async_create_task(_try_upgrade())
+
+        return _on_update
+
+    for coordinator in coordinators.values():
+        entry.async_on_unload(coordinator.async_add_listener(_make_listener(coordinator)))
 
 
 def _migrate_legacy_device(
