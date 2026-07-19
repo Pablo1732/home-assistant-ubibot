@@ -7,6 +7,10 @@ more) straight into Home Assistant.
 
 > Tested with the **UbiBot WS1**. Other models may work but are untested.
 
+> ℹ️ **About this integration:** Built with the help of AI, but every release is
+> carefully reviewed — I test each scenario myself before publishing, and it runs
+> in production in my own Home Assistant.
+
 ---
 
 <a name="english"></a>
@@ -158,6 +162,10 @@ See the [changelog](CHANGELOG.md) for what’s new.
 
 <a name="deutsch"></a>
 ## Deutsch
+
+> ℹ️ **Über diese Integration:** Mit Hilfe von KI entwickelt, aber jede Version
+> wird sorgfältig geprüft — ich teste jedes Szenario vor der Veröffentlichung
+> selbst durch, und sie läuft bei mir produktiv im Einsatz.
 
 ### Was du bekommst
 Jedes hinzugefügte UbiBot-Gerät erscheint als **eigenes Gerät** in Home Assistant
