@@ -15,7 +15,18 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.const import CONF_API_KEY
 
-from .const import DOMAIN, PLATFORMS, CONF_CHANNEL, DEFAULT_SCAN_INTERVAL, CONF_READ_KEY
+from .const import (
+    ACCOUNT_DATA_BASE,
+    API_BASE,
+    CONF_ACCOUNT_KEY,
+    CONF_CHANNEL,
+    CONF_CHANNELS,
+    CONF_READ_KEY,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,11 +51,11 @@ class UbibotCoordinator(DataUpdateCoordinator):
         """Daten asynchron von der Ubibot API abrufen."""
         session = async_get_clientsession(self._hass)
         if self._api_key:
-            # Account-Key Endpoint
-            url = f"https://api.ubibot.io/channels/{self._channel}?account_key={self._api_key}"
+            # Account-Key Endpoint (nur migrierte Alt-Einträge)
+            url = f"{ACCOUNT_DATA_BASE}/channels/{self._channel}?account_key={self._api_key}"
         elif self._read_key:
             # Read-Key Endpoint benötigt webapi und Parameter api_key
-            url = f"https://webapi.ubibot.com/channels/{self._channel}?api_key={self._read_key}"
+            url = f"{API_BASE}/channels/{self._channel}?api_key={self._read_key}"
         else:
             # Kein Schlüssel hinterlegt -> HA bietet Reauth (neuen Schlüssel eingeben) an
             raise ConfigEntryAuthFailed("Missing credentials: api_key or read_key")
@@ -94,41 +105,67 @@ class UbibotCoordinator(DataUpdateCoordinator):
         return payload
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Alt-Eintrag (v1: ein Kanal, flache Daten) -> v2 (channels-Dict) migrieren."""
+    if entry.version >= 2:
+        return True
+
+    old = dict(entry.data)
+    channel = str(old.get(CONF_CHANNEL))
+    record: dict[str, str] = {}
+    if old.get(CONF_READ_KEY):
+        record[CONF_READ_KEY] = old[CONF_READ_KEY]
+    elif old.get(CONF_API_KEY):
+        # Alt-Eintrag mit Account-Key: bleibt funktionsfähig (nicht zwangskonvertiert).
+        record[CONF_ACCOUNT_KEY] = old[CONF_API_KEY]
+
+    new_data: dict = {CONF_CHANNELS: {channel: record}}
+    if CONF_SCAN_INTERVAL in old:
+        new_data[CONF_SCAN_INTERVAL] = old[CONF_SCAN_INTERVAL]
+
+    hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+    _LOGGER.debug("Ubibot: migrated entry %s to version 2 (channel %s)", entry.entry_id, channel)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Richte einen Ubibot ConfigEntry ein."""
-    api_key: str | None = entry.data.get(CONF_API_KEY)
-    read_key: str | None = entry.data.get(CONF_READ_KEY)
-    channel: str = entry.data[CONF_CHANNEL]
-    # Reihenfolge: Optionen > Entry-Daten > Default
-    scan_interval_sec: int = entry.options.get("scan_interval", entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL))
+    """Richte einen Ubibot ConfigEntry ein (kann mehrere Kanäle enthalten)."""
+    channels: dict[str, dict] = entry.data.get(CONF_CHANNELS, {})
+    if not channels:
+        raise ConfigEntryNotReady("No channels configured for this entry")
 
-    # Falls bisher keine Optionen gesetzt sind, initialisiere sie
-    if not entry.options or "scan_interval" not in entry.options:
-        hass.config_entries.async_update_entry(entry, options={"scan_interval": scan_interval_sec})
-
-    coordinator = UbibotCoordinator(
-        hass,
-        entry,
-        api_key,
-        read_key,
-        channel,
-        timedelta(seconds=scan_interval_sec),
+    scan_interval_sec: int = entry.options.get(
+        CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     )
+    interval = timedelta(seconds=scan_interval_sec)
+    coordinators: dict[str, UbibotCoordinator] = {}
+    for channel_id, record in channels.items():
+        coordinators[str(channel_id)] = UbibotCoordinator(
+            hass,
+            entry,
+            record.get(CONF_ACCOUNT_KEY),
+            record.get(CONF_READ_KEY),
+            str(channel_id),
+            interval,
+        )
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as exc:
-        raise ConfigEntryNotReady(f"Initial Ubibot refresh failed: {exc}") from exc
+    # Alle Kanäle parallel aktualisieren; scheitern alle -> Eintrag noch nicht bereit.
+    await asyncio.gather(*(c.async_refresh() for c in coordinators.values()))
+    if not any(c.last_update_success for c in coordinators.values()):
+        raise ConfigEntryNotReady("Initial refresh failed for all Ubibot channels")
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "coordinator": coordinator,
-        "api_key": api_key,
-        "read_key": read_key,
-        "channel": channel,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"coordinators": coordinators}
+
+    # Optionsänderungen (z. B. Abrufintervall) sofort übernehmen.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Eintrag neu laden, wenn Optionen/Daten geändert wurden."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

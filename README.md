@@ -13,8 +13,8 @@ more) straight into Home Assistant.
 ## English
 
 ### What you get
-Your UbiBot device shows up as a single **device** in Home Assistant with these
-sensors (only the ones your device actually provides will appear):
+Each UbiBot device you add shows up as its own **device** in Home Assistant with
+these sensors (only the ones your device actually provides will appear):
 
 | Sensor | Description |
 |--------|-------------|
@@ -50,29 +50,27 @@ When your device goes **offline**, its sensors automatically show as
 ### Setup
 1. Go to **Settings → Devices & Services → Add Integration**.
 2. Search for **UbiBot**.
-3. Fill in just **two** fields:
-   - **Channel ID** – the number of your device (see below).
-   - **API key** – either an Account Key **or** a Read Key (see below).
-     The type is detected automatically.
-4. Click **Submit**. Done – your sensors appear automatically. 🎉
+3. Enter your **API key** and click **Submit**:
+   - **Easiest – Account Key:** leave *Channel ID* empty. You’ll get a list of
+     **all your devices** – just tick the ones you want to add. ✅
+   - **Read Key:** if you prefer a per-device read key, also enter its
+     **Channel ID**.
+4. Done – your sensors appear automatically. 🎉
 
-> The update interval defaults to 5 minutes. You can change it later under
-> the integration’s **Configure** button (see [Options](#options)).
+> 🔒 **Your Account Key is never stored.** It’s only used to list your devices
+> and create a read-only key for each. Home Assistant keeps only the read keys.
 
-#### Where do I find my Channel ID and API key?
+> The update interval defaults to 5 minutes; change it later under the
+> integration’s **Configure** button (see [Options](#options)).
+
+#### Where do I find my API key (and Channel ID)?
 Log in at **[console.ubibot.com](https://console.ubibot.com)** (or the UbiBot
 app), open your device, and go to its **channel settings → API keys**.
 
-- **Channel ID** – shown in the channel settings (a number like `43798`).
-- **API key** – you have two choices:
-
-| Key type | Access | Recommendation |
-|----------|--------|----------------|
-| 🔑 [Read Key](https://www.ubibot.com/platform-api/1195/generate-channel-read-key/) | Read-only, **one device** | ✅ **Recommended – safest** |
-| 🔓 [Account Key](https://www.ubibot.com/platform-api/1188/generate-account-key/) | Your **whole account** | ⚠️ Less secure |
-
-**Tip:** For Home Assistant you only ever need to *read* data, so the **Read
-Key** is the better, safer choice.
+| Key type | What to do | Notes |
+|----------|-----------|-------|
+| 🔓 [Account Key](https://www.ubibot.com/platform-api/1188/generate-account-key/) | Paste it, leave Channel ID empty, pick your devices | Easiest; **not stored** – only read keys are kept |
+| 🔑 [Read Key](https://www.ubibot.com/platform-api/1195/generate-channel-read-key/) | Paste it **and** the **Channel ID** (a number like `43798`) | For a single device |
 
 ---
 
@@ -86,12 +84,19 @@ Go to **Settings → Devices & Services → UbiBot → Configure**, set how ofte
 ### Help & FAQ
 
 <details>
-<summary><b>“Cannot connect” when I add the integration</b></summary>
+<summary><b>“Cannot connect” or “not a valid Account Key”</b></summary>
 
-The Channel ID or the key is wrong. Double-check both:
-- Is the **Channel ID** the right number (no extra spaces)?
-- Did you copy the **whole key**?
+- Using an **Account Key**? Leave the *Channel ID* empty.
+- Using a **Read Key**? You must also enter its **Channel ID**.
+- Did you copy the **whole key** (no extra spaces)?
 - Is your Home Assistant server online?
+</details>
+
+<details>
+<summary><b>How do I add another device later?</b></summary>
+
+Just add the integration again with your Account Key – only devices you haven’t
+added yet will be offered. You can’t add the same device twice.
 </details>
 
 <details>
@@ -143,8 +148,8 @@ See the [changelog](CHANGELOG.md) for what’s new.
 ## Deutsch
 
 ### Was du bekommst
-Dein UbiBot-Gerät erscheint als **ein Gerät** in Home Assistant mit diesen
-Sensoren (es tauchen nur die auf, die dein Gerät tatsächlich liefert):
+Jedes hinzugefügte UbiBot-Gerät erscheint als **eigenes Gerät** in Home Assistant
+mit diesen Sensoren (es tauchen nur die auf, die dein Gerät tatsächlich liefert):
 
 | Sensor | Beschreibung |
 |--------|--------------|
@@ -181,30 +186,29 @@ für aktuell.
 ### Einrichtung
 1. Gehe zu **Einstellungen → Geräte & Dienste → Integration hinzufügen**.
 2. Suche nach **UbiBot**.
-3. Fülle nur **zwei** Felder aus:
-   - **Channel-ID** – die Nummer deines Geräts (siehe unten).
-   - **API-Schlüssel** – entweder ein Account-Key **oder** ein Read-Key
-     (siehe unten). Der Typ wird automatisch erkannt.
-4. Klicke **Bestätigen**. Fertig – die Sensoren erscheinen automatisch. 🎉
+3. Gib deinen **API-Schlüssel** ein und klicke **Bestätigen**:
+   - **Am einfachsten – Account-Key:** *Channel-ID* leer lassen. Du bekommst eine
+     Liste **all deiner Geräte** – hak einfach die gewünschten an. ✅
+   - **Read-Key:** wenn du lieber einen Gerät-Schlüssel nutzt, gib zusätzlich
+     dessen **Channel-ID** ein.
+4. Fertig – die Sensoren erscheinen automatisch. 🎉
 
-> Das Abrufintervall steht standardmäßig auf 5 Minuten. Du kannst es später über
-> den **Konfigurieren**-Button ändern (siehe [Optionen](#optionen)).
+> 🔒 **Dein Account-Key wird nie gespeichert.** Er dient nur dazu, deine Geräte
+> aufzulisten und pro Gerät einen Nur-Lese-Schlüssel anzulegen. In Home Assistant
+> liegen nur die Read-Keys.
 
-#### Wo finde ich Channel-ID und API-Schlüssel?
+> Das Abrufintervall steht standardmäßig auf 5 Minuten; ändern kannst du es später
+> über den **Konfigurieren**-Button (siehe [Optionen](#optionen)).
+
+#### Wo finde ich meinen API-Schlüssel (und die Channel-ID)?
 Melde dich unter **[console.ubibot.com](https://console.ubibot.com)** (oder in
 der UbiBot-App) an, öffne dein Gerät und gehe zu den
 **Kanal-Einstellungen → API Keys**.
 
-- **Channel-ID** – steht in den Kanal-Einstellungen (eine Nummer wie `43798`).
-- **API-Schlüssel** – du hast zwei Möglichkeiten:
-
-| Schlüsseltyp | Zugriff | Empfehlung |
-|--------------|---------|------------|
-| 🔑 [Read Key](https://www.ubibot.com/platform-api/1195/generate-channel-read-key/) | Nur lesen, **ein Gerät** | ✅ **Empfohlen – am sichersten** |
-| 🔓 [Account Key](https://www.ubibot.com/platform-api/1188/generate-account-key/) | Dein **ganzes Konto** | ⚠️ Weniger sicher |
-
-**Tipp:** Home Assistant muss die Daten nur *lesen* – nimm daher am besten den
-**Read Key**, das ist die sicherere Wahl.
+| Schlüsseltyp | Was tun | Hinweis |
+|--------------|---------|---------|
+| 🔓 [Account Key](https://www.ubibot.com/platform-api/1188/generate-account-key/) | Einfügen, Channel-ID leer lassen, Geräte anhaken | Am einfachsten; **wird nicht gespeichert** – nur Read-Keys bleiben |
+| 🔑 [Read Key](https://www.ubibot.com/platform-api/1195/generate-channel-read-key/) | Einfügen **und** die **Channel-ID** (Nummer wie `43798`) | Für ein einzelnes Gerät |
 
 ---
 
@@ -219,12 +223,20 @@ Empfehlung: `300` (5 Minuten).
 ### Hilfe & FAQ
 
 <details>
-<summary><b>„Verbindung fehlgeschlagen“ beim Hinzufügen</b></summary>
+<summary><b>„Verbindung fehlgeschlagen“ oder „kein gültiger Account-Key“</b></summary>
 
-Die Channel-ID oder der Schlüssel ist falsch. Prüfe beides:
-- Ist die **Channel-ID** die richtige Nummer (keine Leerzeichen)?
-- Hast du den **kompletten Schlüssel** kopiert?
+- Nutzt du einen **Account-Key**? Lass die *Channel-ID* leer.
+- Nutzt du einen **Read-Key**? Dann musst du zusätzlich die **Channel-ID** eingeben.
+- Hast du den **kompletten Schlüssel** kopiert (keine Leerzeichen)?
 - Ist dein Home-Assistant-Server online?
+</details>
+
+<details>
+<summary><b>Wie füge ich später ein weiteres Gerät hinzu?</b></summary>
+
+Füge die Integration einfach nochmal mit deinem Account-Key hinzu – es werden
+nur Geräte angeboten, die du noch nicht hinzugefügt hast. Dasselbe Gerät kann
+nicht doppelt hinzugefügt werden.
 </details>
 
 <details>

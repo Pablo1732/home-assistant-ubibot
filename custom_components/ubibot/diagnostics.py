@@ -15,13 +15,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, CONF_READ_KEY
+from .const import DOMAIN, CONF_ACCOUNT_KEY, CONF_READ_KEY
 
 # Felder, die niemals in der Diagnose-Datei landen dürfen:
 # Zugangsschlüssel und personenbezogene / standortbezogene Daten.
 TO_REDACT = {
     CONF_API_KEY,
     CONF_READ_KEY,
+    CONF_ACCOUNT_KEY,
     "write_key",
     "user_id",
     "username",
@@ -42,7 +43,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Diagnose-Daten für einen Config-Eintrag zurückgeben."""
     store = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
-    coordinator = store.get("coordinator")
+    coordinators = store.get("coordinators", {})
 
     diagnostics: dict[str, Any] = {
         "entry": {
@@ -51,13 +52,14 @@ async def async_get_config_entry_diagnostics(
             "data": async_redact_data(dict(entry.data), TO_REDACT),
             "options": dict(entry.options),
         },
+        "channels": {
+            channel_id: {
+                "last_update_success": coordinator.last_update_success,
+                "update_interval": str(coordinator.update_interval),
+                "data": async_redact_data(coordinator.data or {}, TO_REDACT),
+            }
+            for channel_id, coordinator in coordinators.items()
+        },
     }
-
-    if coordinator is not None:
-        diagnostics["coordinator"] = {
-            "last_update_success": coordinator.last_update_success,
-            "update_interval": str(coordinator.update_interval),
-            "data": async_redact_data(coordinator.data or {}, TO_REDACT),
-        }
 
     return diagnostics

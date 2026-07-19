@@ -3,26 +3,44 @@
     "step": {
       "user": {
         "title": "Set up UbiBot",
-        "description": "Enter your channel ID and an API key. You can use either an Account Key or a channel Read Key – the type is detected automatically. The update interval can be changed later under the integration's options.",
+        "description": "Enter your **API key**. With an **Account Key** all your devices are listed and you pick which to add — no Channel ID needed. Only if you use a **Read Key**, also enter its Channel ID below.",
         "data": {
-          "channel": "Channel ID",
-          "api_key": "API key (Account or Read Key)"
+          "api_key": "API key (Account or Read Key)",
+          "channel": "Channel ID (only for a Read Key)"
+        },
+        "data_description": {
+          "channel": "Leave empty when using an Account Key."
         }
+      },
+      "select": {
+        "title": "Choose devices",
+        "description": "Select the UbiBot devices you want to add. A read-only key is created for each of them automatically.",
+        "data": {
+          "channels": "Devices"
+        }
+      },
+      "limited": {
+        "title": "Read key limit reached",
+        "description": "These devices already have the maximum of 10 read keys, so an existing key is reused: {channels}. Everything still works — just click Submit."
       },
       "reauth_confirm": {
         "title": "UbiBot – update credentials",
-        "description": "The key for channel {channel} is no longer valid or has expired. Please enter a new key (Account or Read Key).",
+        "description": "The key for {channels} is no longer valid. Enter a new Account Key (recommended) or, for a single device, a new Read Key.",
         "data": {
           "api_key": "New key"
         }
       }
     },
     "error": {
-      "cannot_connect": "Connection failed – check the channel ID and key.",
-      "required": "This field is required."
+      "cannot_connect": "Connection failed – please check your key (and Channel ID) and try again.",
+      "required": "This field is required.",
+      "account_key_invalid": "That is not a valid Account Key. If you are using a Read Key, please also enter its Channel ID.",
+      "already_configured": "This device is already added.",
+      "no_selection": "Please select at least one device.",
+      "need_account_key": "This entry has several devices – please use an Account Key to renew it."
     },
     "abort": {
-      "already_configured": "This channel is already configured.",
+      "no_new_devices": "All your UbiBot devices are already added.",
       "reauth_successful": "Credentials updated successfully."
     }
   },

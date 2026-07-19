@@ -3,26 +3,44 @@
     "step": {
       "user": {
         "title": "UbiBot einrichten",
-        "description": "Gib deine Channel-ID und einen API-Schlüssel ein. Du kannst wahlweise einen Account-Key oder einen Read-Key des Kanals verwenden – der Typ wird automatisch erkannt. Das Abrufintervall lässt sich später in den Optionen der Integration ändern.",
+        "description": "Gib deinen **API-Schlüssel** ein. Mit einem **Account-Key** werden alle deine Geräte aufgelistet und du wählst aus, welche hinzugefügt werden – keine Channel-ID nötig. Nur wenn du einen **Read-Key** nutzt, trage unten zusätzlich dessen Channel-ID ein.",
         "data": {
-          "channel": "Channel-ID",
-          "api_key": "API-Schlüssel (Account- oder Read-Key)"
+          "api_key": "API-Schlüssel (Account- oder Read-Key)",
+          "channel": "Channel-ID (nur bei Read-Key)"
+        },
+        "data_description": {
+          "channel": "Bei einem Account-Key leer lassen."
         }
+      },
+      "select": {
+        "title": "Geräte auswählen",
+        "description": "Wähle die UbiBot-Geräte, die du hinzufügen möchtest. Für jedes wird automatisch ein Nur-Lese-Schlüssel angelegt.",
+        "data": {
+          "channels": "Geräte"
+        }
+      },
+      "limited": {
+        "title": "Read-Key-Limit erreicht",
+        "description": "Diese Geräte haben bereits die maximal 10 Read-Keys, daher wird ein bestehender Schlüssel wiederverwendet: {channels}. Es funktioniert trotzdem alles – klicke einfach auf Bestätigen."
       },
       "reauth_confirm": {
         "title": "UbiBot – Zugangsdaten erneuern",
-        "description": "Der Schlüssel für Channel {channel} ist ungültig oder abgelaufen. Bitte gib einen neuen Schlüssel ein (Account- oder Read-Key).",
+        "description": "Der Schlüssel für {channels} ist nicht mehr gültig. Gib einen neuen Account-Key ein (empfohlen) oder, bei einem einzelnen Gerät, einen neuen Read-Key.",
         "data": {
           "api_key": "Neuer Schlüssel"
         }
       }
     },
     "error": {
-      "cannot_connect": "Verbindung fehlgeschlagen – Channel-ID oder Schlüssel prüfen.",
-      "required": "Dieses Feld ist erforderlich."
+      "cannot_connect": "Verbindung fehlgeschlagen – bitte Schlüssel (und Channel-ID) prüfen und erneut versuchen.",
+      "required": "Dieses Feld ist erforderlich.",
+      "account_key_invalid": "Das ist kein gültiger Account-Key. Wenn du einen Read-Key nutzt, gib bitte zusätzlich dessen Channel-ID ein.",
+      "already_configured": "Dieses Gerät ist bereits hinzugefügt.",
+      "no_selection": "Bitte wähle mindestens ein Gerät aus.",
+      "need_account_key": "Dieser Eintrag enthält mehrere Geräte – bitte nutze zum Erneuern einen Account-Key."
     },
     "abort": {
-      "already_configured": "Dieser Channel ist bereits eingerichtet.",
+      "no_new_devices": "Alle deine UbiBot-Geräte sind bereits hinzugefügt.",
       "reauth_successful": "Zugangsdaten erfolgreich aktualisiert."
     }
   },

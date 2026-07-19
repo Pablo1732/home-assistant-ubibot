@@ -16,14 +16,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    data = hass.data[DOMAIN][entry.entry_id]
-    coordinator = data["coordinator"]
-    channel: str = data["channel"]
+    coordinators = hass.data[DOMAIN][entry.entry_id]["coordinators"]
 
     entities: list[UbibotSensor] = []
-    # Erzeuge alle Sensoren; Verfügbarkeit wird dynamisch geprüft
-    for sensor_type in SENSOR_TYPES.keys():
-        entities.append(UbibotSensor(coordinator, sensor_type, channel))
+    # Ein Eintrag kann mehrere Kanäle (Geräte) enthalten.
+    for channel_id, coordinator in coordinators.items():
+        for sensor_type in SENSOR_TYPES:
+            entities.append(UbibotSensor(coordinator, sensor_type, str(channel_id)))
 
     async_add_entities(entities)
 
