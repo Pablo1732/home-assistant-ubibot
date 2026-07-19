@@ -160,16 +160,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"coordinators": coordinators}
 
-    # Optionsänderungen (z. B. Abrufintervall) sofort übernehmen.
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Eintrag neu laden, wenn Optionen/Daten geändert wurden."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

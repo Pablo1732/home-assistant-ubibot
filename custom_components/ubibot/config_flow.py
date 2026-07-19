@@ -209,11 +209,12 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     key_value, channels, errors
                 )
                 if new_channels is not None:
-                    # Der Update-Listener lädt den Eintrag automatisch neu.
-                    self.hass.config_entries.async_update_entry(
-                        entry, data={**entry.data, CONF_CHANNELS: new_channels}
+                    # Eintrag aktualisieren UND zuverlässig neu laden (kanonischer
+                    # Reauth-Abschluss – lädt auch, wenn sich die Daten nicht ändern).
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data={**entry.data, CONF_CHANNELS: new_channels},
                     )
-                    return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -278,6 +279,8 @@ class UbibotOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         if user_input is not None:
+            # Geändertes Abrufintervall sofort übernehmen -> Eintrag neu laden.
+            self.hass.config_entries.async_schedule_reload(self._entry.entry_id)
             return self.async_create_entry(title="", data=user_input)
 
         current = self._entry.options.get(
