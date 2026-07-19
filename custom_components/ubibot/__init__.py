@@ -17,6 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.const import CONF_API_KEY
 
+from . import api
 from .const import (
     ACCOUNT_DATA_BASE,
     API_BASE,
@@ -133,11 +134,54 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def _async_upgrade_account_keys(
+    hass: HomeAssistant, entry: ConfigEntry, channels: dict[str, dict]
+) -> dict[str, dict]:
+    """Account-Keys zu Read-Keys upgraden und aus der Speicherung entfernen.
+
+    Best effort: pro Kanal mit gespeichertem Account-Key wird ein Read-Key
+    beschafft (bestehenden HA-Key wiederverwenden, sonst erzeugen). Klappt das,
+    wird nur noch der Read-Key gespeichert. Scheitert es (z. B. keine Verbindung),
+    bleibt der Account-Key erhalten und es wird beim nächsten Start erneut
+    versucht -> das Setup scheitert nie an diesem Schritt.
+    """
+    updated = dict(channels)
+    changed = False
+    for channel_id, record in channels.items():
+        account_key = record.get(CONF_ACCOUNT_KEY)
+        if not account_key or record.get(CONF_READ_KEY):
+            continue
+        try:
+            read_key, _ = await api.async_provision_read_key(
+                hass, account_key, str(channel_id)
+            )
+        except api.UbibotError as exc:
+            _LOGGER.debug(
+                "Ubibot: read-key upgrade for channel %s deferred: %s", channel_id, exc
+            )
+            continue
+        updated[str(channel_id)] = {CONF_READ_KEY: read_key}
+        changed = True
+        _LOGGER.info(
+            "Ubibot: upgraded channel %s from account key to a stored read key", channel_id
+        )
+
+    if changed:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_CHANNELS: updated}
+        )
+    return updated
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Richte einen Ubibot ConfigEntry ein (kann mehrere Kanäle enthalten)."""
     channels: dict[str, dict] = entry.data.get(CONF_CHANNELS, {})
     if not channels:
         raise ConfigEntryNotReady("No channels configured for this entry")
+
+    # Gespeicherte Account-Keys (aus YAML-Import / Alt-Migration) einmalig zu
+    # Read-Keys upgraden und den Account-Key aus der Speicherung entfernen.
+    channels = await _async_upgrade_account_keys(hass, entry, channels)
 
     scan_interval_sec: int = entry.options.get(
         CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)

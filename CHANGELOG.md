@@ -12,6 +12,9 @@ Alle wichtigen Änderungen an dieser Integration werden hier dokumentiert.
   have a `sensor: - platform: ubibot` block, it is imported into a UI entry
   automatically — **your entities, history and device (area, name) are kept**.
   A repair notice reminds you to remove the YAML block afterwards.
+- 🔒 **Account keys are upgraded to read-only keys.** An account key coming from
+  the import (or an old account-key entry) is converted to a read key once the
+  integration is online, and the account key is then removed from storage.
 - No duplicate entities: the import skips devices that are already added, in any
   order.
 
@@ -21,6 +24,9 @@ Alle wichtigen Änderungen an dieser Integration werden hier dokumentiert.
   einen UI-Eintrag importiert — **Entitäten, Verlauf und Gerät (Area, Name)
   bleiben erhalten**. Eine Reparatur-Meldung erinnert dich, den YAML-Block danach
   zu entfernen.
+- 🔒 **Account-Keys werden zu Read-Keys hochgezogen.** Ein Account-Key aus dem
+  Import (oder einem alten Account-Key-Eintrag) wird umgewandelt, sobald die
+  Integration online ist, und danach aus der Speicherung entfernt.
 - Keine doppelten Entitäten: Der Import überspringt bereits hinzugefügte Geräte,
   egal in welcher Reihenfolge.
 
