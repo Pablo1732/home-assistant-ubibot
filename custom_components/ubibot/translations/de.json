@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "UbiBot einrichten",
+        "description": "Gib deine Channel-ID und einen API-Schlüssel ein. Du kannst wahlweise einen Account-Key oder einen Read-Key des Kanals verwenden – der Typ wird automatisch erkannt. Das Abrufintervall lässt sich später in den Optionen der Integration ändern.",
+        "data": {
+          "channel": "Channel-ID",
+          "api_key": "API-Schlüssel (Account- oder Read-Key)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "UbiBot – Zugangsdaten erneuern",
+        "description": "Der Schlüssel für Channel {channel} ist ungültig oder abgelaufen. Bitte gib einen neuen Schlüssel ein (Account- oder Read-Key).",
+        "data": {
+          "api_key": "Neuer Schlüssel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen – Channel-ID oder Schlüssel prüfen.",
+      "required": "Dieses Feld ist erforderlich."
+    },
+    "abort": {
+      "already_configured": "Dieser Channel ist bereits eingerichtet.",
+      "reauth_successful": "Zugangsdaten erfolgreich aktualisiert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "UbiBot-Optionen",
+        "data": {
+          "scan_interval": "Abrufintervall (Sekunden)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {"name": "Temperatur"},
+      "humidity": {"name": "Luftfeuchtigkeit"},
+      "lux": {"name": "Beleuchtungsstärke"},
+      "wifi_rssi": {"name": "WLAN-Signal"},
+      "battery_voltage": {"name": "Batteriespannung"},
+      "temperature_external": {"name": "Externe Temperatur"}
+    }
+  }
+}

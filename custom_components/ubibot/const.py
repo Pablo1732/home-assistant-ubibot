@@ -31,6 +31,14 @@ SENSOR_TYPES = {
         "unit": "dBm",
         "icon": "mdi:wifi",
         "field": "field5",
+        "category": "diagnostic",
+    },
+    "battery_voltage": {
+        "class": "voltage",
+        "unit": "V",
+        "icon": "mdi:battery",
+        "field": "field4",
+        "category": "diagnostic",
     },
     "temperature_external": {
         "class": "temperature",

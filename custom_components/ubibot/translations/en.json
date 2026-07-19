@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up UbiBot",
+        "description": "Enter your channel ID and an API key. You can use either an Account Key or a channel Read Key – the type is detected automatically. The update interval can be changed later under the integration's options.",
+        "data": {
+          "channel": "Channel ID",
+          "api_key": "API key (Account or Read Key)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "UbiBot – update credentials",
+        "description": "The key for channel {channel} is no longer valid or has expired. Please enter a new key (Account or Read Key).",
+        "data": {
+          "api_key": "New key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connection failed – check the channel ID and key.",
+      "required": "This field is required."
+    },
+    "abort": {
+      "already_configured": "This channel is already configured.",
+      "reauth_successful": "Credentials updated successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "UbiBot options",
+        "data": {
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {"name": "Temperature"},
+      "humidity": {"name": "Humidity"},
+      "lux": {"name": "Illuminance"},
+      "wifi_rssi": {"name": "WiFi signal"},
+      "battery_voltage": {"name": "Battery voltage"},
+      "temperature_external": {"name": "External temperature"}
+    }
+  }
+}
