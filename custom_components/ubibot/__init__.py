@@ -155,6 +155,9 @@ async def _async_upgrade_account_keys(
             read_key, _ = await api.async_provision_read_key(
                 hass, account_key, str(channel_id)
             )
+            # Read-Key erst gegen den Kanal prüfen -> Account-Key wird NUR entfernt,
+            # wenn der neue Read-Key nachweislich Daten abruft.
+            await api.async_validate_read_key(hass, read_key, str(channel_id))
         except api.UbibotError as exc:
             _LOGGER.debug(
                 "Ubibot: read-key upgrade for channel %s deferred: %s", channel_id, exc
