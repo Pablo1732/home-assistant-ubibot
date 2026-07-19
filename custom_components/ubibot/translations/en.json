@@ -23,6 +23,22 @@
         "title": "Read key limit reached",
         "description": "These devices already have the maximum of 10 read keys, so an existing key is reused: {channels}. Everything still works — just click Submit."
       },
+      "account_hint": {
+        "title": "That was an Account Key",
+        "description": "You entered an **Account Key** together with a Channel ID — the Channel ID wasn't needed. A read-only key for channel {channel} was created. Tip: with just the Account Key (leave Channel ID empty) you can pick all your devices at once.",
+        "menu_options": {
+          "add_this_device": "Add just this device",
+          "pick_devices": "Show all my devices instead"
+        }
+      },
+      "account_fallback": {
+        "title": "Read key setup didn't work",
+        "description": "A read-only key for channel {channel} could not be set up, but data **can** be fetched using your Account Key. You can continue with the Account Key — note this is less secure, as it grants access to your whole account.",
+        "menu_options": {
+          "use_account_key": "Use the Account Key (less secure)",
+          "cancel_setup": "Cancel"
+        }
+      },
       "reauth_confirm": {
         "title": "UbiBot – update credentials",
         "description": "The key for {channels} is no longer valid. Enter a new Account Key (recommended) or, for a single device, a new Read Key.",
@@ -43,7 +59,8 @@
       "no_new_devices": "All your UbiBot devices are already added.",
       "reauth_successful": "Credentials updated successfully.",
       "already_configured": "This device is already added.",
-      "invalid_import": "Could not import the old YAML configuration (missing channel or key)."
+      "invalid_import": "Could not import the old YAML configuration (missing channel or key).",
+      "cancelled": "Setup cancelled."
     }
   },
   "issues": {

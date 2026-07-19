@@ -23,6 +23,22 @@
         "title": "Read-Key-Limit erreicht",
         "description": "Diese Geräte haben bereits die maximal 10 Read-Keys, daher wird ein bestehender Schlüssel wiederverwendet: {channels}. Es funktioniert trotzdem alles – klicke einfach auf Bestätigen."
       },
+      "account_hint": {
+        "title": "Das war ein Account-Key",
+        "description": "Du hast einen **Account-Key** zusammen mit einer Channel-ID eingegeben – die Channel-ID war nicht nötig. Für Kanal {channel} wurde ein Nur-Lese-Schlüssel erstellt. Tipp: Mit nur dem Account-Key (Channel-ID leer lassen) kannst du alle deine Geräte auf einmal auswählen.",
+        "menu_options": {
+          "add_this_device": "Nur dieses Gerät hinzufügen",
+          "pick_devices": "Stattdessen alle meine Geräte zeigen"
+        }
+      },
+      "account_fallback": {
+        "title": "Read-Key-Umstellung hat nicht geklappt",
+        "description": "Für Kanal {channel} konnte kein Nur-Lese-Schlüssel eingerichtet werden, aber die Daten **können** über deinen Account-Key abgefragt werden. Du kannst mit dem Account-Key fortfahren – Achtung, das ist unsicherer, da er Zugriff auf dein ganzes Konto gewährt.",
+        "menu_options": {
+          "use_account_key": "Account-Key verwenden (unsicherer)",
+          "cancel_setup": "Abbrechen"
+        }
+      },
       "reauth_confirm": {
         "title": "UbiBot – Zugangsdaten erneuern",
         "description": "Der Schlüssel für {channels} ist nicht mehr gültig. Gib einen neuen Account-Key ein (empfohlen) oder, bei einem einzelnen Gerät, einen neuen Read-Key.",
@@ -43,7 +59,8 @@
       "no_new_devices": "Alle deine UbiBot-Geräte sind bereits hinzugefügt.",
       "reauth_successful": "Zugangsdaten erfolgreich aktualisiert.",
       "already_configured": "Dieses Gerät ist bereits hinzugefügt.",
-      "invalid_import": "Die alte YAML-Konfiguration konnte nicht importiert werden (Channel-ID oder Schlüssel fehlt)."
+      "invalid_import": "Die alte YAML-Konfiguration konnte nicht importiert werden (Channel-ID oder Schlüssel fehlt).",
+      "cancelled": "Einrichtung abgebrochen."
     }
   },
   "issues": {

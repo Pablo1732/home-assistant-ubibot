@@ -55,6 +55,8 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry: config_entries.ConfigEntry | None = None
         self._pending_entry: tuple[str, dict] | None = None
         self._limited_channels: list[str] = []
+        self._pending_channel: str | None = None
+        self._pending_readkey: str | None = None
 
     # ------------------------------------------------------------------ helpers
     def _configured_channel_ids(self) -> set[str]:
@@ -77,19 +79,28 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not key_value:
                 errors[CONF_API_KEY] = "required"
             elif channel:
-                # ---- Read-Key-Weg: genau ein Kanal ----
+                # ---- Channel-ID angegeben ----
                 if channel in self._configured_channel_ids():
                     errors[CONF_CHANNEL] = "already_configured"
                 else:
+                    # 1) Als Read-Key versuchen.
                     try:
                         await api.async_validate_read_key(self.hass, key_value, channel)
+                        is_read_key = True
                     except api.UbibotError:
-                        errors["base"] = "cannot_connect"
-                    else:
+                        is_read_key = False
+                    if is_read_key:
                         return self.async_create_entry(
                             title=f"UbiBot {channel}",
                             data={CONF_CHANNELS: {channel: {CONF_READ_KEY: key_value}}},
                         )
+                    # 2) Kein Read-Key -> als Account-Key für diesen Kanal behandeln.
+                    self._account_key = key_value
+                    self._pending_channel = channel
+                    result = await self._async_account_with_channel()
+                    if result is not None:
+                        return result
+                    errors["base"] = "cannot_connect"
             else:
                 # ---- Account-Key-Weg: Geräte auflisten ----
                 try:
@@ -184,6 +195,80 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "channels": ", ".join(self._limited_channels)  # type: ignore[attr-defined]
             },
         )
+
+    async def _async_account_with_channel(self):
+        """Channel-ID wurde angegeben, aber der Schlüssel ist kein Read-Key.
+
+        Prüft, ob es ein gültiger Account-Key für den Kanal ist, und leitet in den
+        Hinweis- bzw. Fallback-Schritt. Gibt None zurück, wenn der Schlüssel weder
+        Read- noch Account-Key ist (-> „cannot_connect").
+        """
+        channel = self._pending_channel
+        # Gültiger Account-Key mit Zugriff auf den Kanal? (Read-Key beschaffen)
+        try:
+            read_key, _ = await api.async_provision_read_key(
+                self.hass, self._account_key, channel
+            )
+        except api.UbibotError:
+            return None  # weder Read- noch Account-Key
+
+        # Funktioniert der beschaffte Read-Key wirklich?
+        try:
+            await api.async_validate_read_key(self.hass, read_key, channel)
+        except api.UbibotError:
+            # Read-Key geht nicht -> geht wenigstens der Account-Key-Datenabruf?
+            try:
+                await api.async_validate_account_key(self.hass, self._account_key, channel)
+            except api.UbibotError:
+                return None
+            return await self.async_step_account_fallback()
+
+        # Read-Key funktioniert -> Hinweis-Menü.
+        self._pending_readkey = read_key
+        return await self.async_step_account_hint()
+
+    async def async_step_account_hint(self, user_input=None):
+        """Hinweis: Account-Key erkannt, Channel-ID war nicht nötig."""
+        return self.async_show_menu(
+            step_id="account_hint",
+            menu_options=["add_this_device", "pick_devices"],
+            description_placeholders={"channel": str(self._pending_channel)},
+        )
+
+    async def async_step_add_this_device(self, user_input=None):
+        """Nur das eine (per Account-Key erkannte) Gerät hinzufügen."""
+        channel = self._pending_channel
+        return self.async_create_entry(
+            title=f"UbiBot {channel}",
+            data={CONF_CHANNELS: {channel: {CONF_READ_KEY: self._pending_readkey}}},
+        )
+
+    async def async_step_pick_devices(self, user_input=None):
+        """Doch alle Geräte auflisten (komfortabler Account-Key-Weg)."""
+        try:
+            self._channels = await api.async_list_channels(self.hass, self._account_key)
+        except api.UbibotError:
+            return self.async_abort(reason="cannot_connect")
+        return await self.async_step_select()
+
+    async def async_step_account_fallback(self, user_input=None):
+        """Read-Key ging nicht, aber Account-Key-Abruf schon -> Fallback anbieten."""
+        return self.async_show_menu(
+            step_id="account_fallback",
+            menu_options=["use_account_key", "cancel_setup"],
+            description_placeholders={"channel": str(self._pending_channel)},
+        )
+
+    async def async_step_use_account_key(self, user_input=None):
+        """Bewusst per Account-Key abfragen (unsicherer) – Nutzerentscheidung."""
+        channel = self._pending_channel
+        return self.async_create_entry(
+            title=f"UbiBot {channel}",
+            data={CONF_CHANNELS: {channel: {CONF_ACCOUNT_KEY: self._account_key}}},
+        )
+
+    async def async_step_cancel_setup(self, user_input=None):
+        return self.async_abort(reason="cancelled")
 
     async def async_step_import(self, import_data):
         """YAML-Import der Alt-Integration (ms32035: sensor: - platform: ubibot).

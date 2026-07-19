@@ -15,6 +15,11 @@ Alle wichtigen Änderungen an dieser Integration werden hier dokumentiert.
 - 🔒 **Account keys are upgraded to read-only keys.** An account key coming from
   the import (or an old account-key entry) is converted to a read key once the
   integration is online, and the account key is then removed from storage.
+- 🧭 **Entering an Account Key together with a Channel ID now works.** It's
+  detected, a read key is created for that device, and you get a hint that the
+  Channel ID wasn't needed (with the option to pick all your devices instead).
+  If a read key can't be set up but the Account Key can fetch data, you're
+  offered to continue with the Account Key (less secure).
 - No duplicate entities: the import skips devices that are already added, in any
   order.
 
@@ -27,6 +32,11 @@ Alle wichtigen Änderungen an dieser Integration werden hier dokumentiert.
 - 🔒 **Account-Keys werden zu Read-Keys hochgezogen.** Ein Account-Key aus dem
   Import (oder einem alten Account-Key-Eintrag) wird umgewandelt, sobald die
   Integration online ist, und danach aus der Speicherung entfernt.
+- 🧭 **Account-Key zusammen mit Channel-ID eingeben funktioniert jetzt.** Wird
+  erkannt, ein Read-Key für das Gerät wird erstellt, plus Hinweis, dass die
+  Channel-ID nicht nötig war (mit Option, stattdessen alle Geräte auszuwählen).
+  Klappt kein Read-Key, aber der Account-Key-Abruf, wird angeboten, mit dem
+  Account-Key fortzufahren (unsicherer).
 - Keine doppelten Entitäten: Der Import überspringt bereits hinzugefügte Geräte,
   egal in welcher Reihenfolge.
 

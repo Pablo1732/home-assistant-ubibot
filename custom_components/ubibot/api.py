@@ -16,7 +16,7 @@ import aiohttp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import API_BASE, MAX_READ_KEYS, READ_KEY_NOTE
+from .const import ACCOUNT_DATA_BASE, API_BASE, MAX_READ_KEYS, READ_KEY_NOTE
 
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = aiohttp.ClientTimeout(total=20)
@@ -76,6 +76,13 @@ async def async_validate_read_key(hass: HomeAssistant, read_key: str, channel_id
     """Read-Key gegen einen Kanal prüfen (wirft bei ungültig/nicht erreichbar)."""
     session = async_get_clientsession(hass)
     await _request_json(session, _channel_path(channel_id), params={"api_key": read_key})
+
+
+async def async_validate_account_key(hass: HomeAssistant, account_key: str, channel_id: str) -> None:
+    """Prüfen, ob der Account-Key den Kanal über den Daten-Endpoint abrufen kann."""
+    session = async_get_clientsession(hass)
+    url = f"{ACCOUNT_DATA_BASE}/channels/{quote(str(channel_id), safe='')}"
+    await _request_json(session, url, params={"account_key": account_key})
 
 
 async def async_provision_read_key(
