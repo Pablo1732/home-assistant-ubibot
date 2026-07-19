@@ -68,7 +68,8 @@
       "reauth_successful": "Credentials updated successfully.",
       "already_configured": "This device is already added.",
       "invalid_import": "Could not import the old YAML configuration (missing channel or key).",
-      "cancelled": "Setup cancelled."
+      "cancelled": "Setup cancelled.",
+      "cannot_connect": "Connection failed – please check your key and try again."
     }
   },
   "issues": {

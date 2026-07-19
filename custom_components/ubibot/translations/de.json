@@ -68,7 +68,8 @@
       "reauth_successful": "Zugangsdaten erfolgreich aktualisiert.",
       "already_configured": "Dieses Gerät ist bereits hinzugefügt.",
       "invalid_import": "Die alte YAML-Konfiguration konnte nicht importiert werden (Channel-ID oder Schlüssel fehlt).",
-      "cancelled": "Einrichtung abgebrochen."
+      "cancelled": "Einrichtung abgebrochen.",
+      "cannot_connect": "Verbindung fehlgeschlagen – bitte Schlüssel prüfen und erneut versuchen."
     }
   },
   "issues": {

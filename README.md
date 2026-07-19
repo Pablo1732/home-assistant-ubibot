@@ -57,8 +57,10 @@ When your device goes **offline**, its sensors automatically show as
      **Channel ID**.
 4. Done – your sensors appear automatically. 🎉
 
-> 🔒 **Your Account Key is never stored.** It’s only used to list your devices
-> and create a read-only key for each. Home Assistant keeps only the read keys.
+> 🔒 **Only read keys are stored, not your Account Key.** It’s used to list your
+> devices and create a read-only key for each, then discarded. (If a read key
+> can’t be set up right away, the Account Key is kept only until one works, then
+> removed automatically.)
 
 > The update interval defaults to 5 minutes; change it later under the
 > integration’s **Configure** button (see [Options](#options)).
@@ -203,9 +205,11 @@ für aktuell.
      dessen **Channel-ID** ein.
 4. Fertig – die Sensoren erscheinen automatisch. 🎉
 
-> 🔒 **Dein Account-Key wird nie gespeichert.** Er dient nur dazu, deine Geräte
-> aufzulisten und pro Gerät einen Nur-Lese-Schlüssel anzulegen. In Home Assistant
-> liegen nur die Read-Keys.
+> 🔒 **Gespeichert werden nur Read-Keys, nicht dein Account-Key.** Er dient dazu,
+> deine Geräte aufzulisten und pro Gerät einen Nur-Lese-Schlüssel anzulegen, und
+> wird danach verworfen. (Klappt ein Read-Key mal nicht sofort, bleibt der
+> Account-Key nur so lange, bis einer funktioniert, und wird dann automatisch
+> entfernt.)
 
 > Das Abrufintervall steht standardmäßig auf 5 Minuten; ändern kannst du es später
 > über den **Konfigurieren**-Button (siehe [Optionen](#optionen)).
