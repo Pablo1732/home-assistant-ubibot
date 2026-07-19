@@ -39,6 +39,14 @@
           "cancel_setup": "Abbrechen"
         }
       },
+      "select_fallback": {
+        "title": "Manche Geräte brauchen den Account-Key",
+        "description": "Für diese Geräte konnte kein funktionierender Read-Key eingerichtet werden: {channels}. Ihre Daten können trotzdem über deinen Account-Key abgefragt werden (unsicherer). Was soll passieren?",
+        "menu_options": {
+          "use_account_key_multi": "Für diese den Account-Key verwenden (unsicherer)",
+          "add_read_key_only": "Nur die Geräte mit funktionierendem Read-Key hinzufügen"
+        }
+      },
       "reauth_confirm": {
         "title": "UbiBot – Zugangsdaten erneuern",
         "description": "Der Schlüssel für {channels} ist nicht mehr gültig. Gib einen neuen Account-Key ein (empfohlen) oder, bei einem einzelnen Gerät, einen neuen Read-Key.",

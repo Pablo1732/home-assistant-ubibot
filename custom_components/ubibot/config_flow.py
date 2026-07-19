@@ -57,6 +57,8 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._limited_channels: list[str] = []
         self._pending_channel: str | None = None
         self._pending_readkey: str | None = None
+        self._pending_readonly: dict[str, str] = {}
+        self._fallback_channels: list[str] = []
 
     # ------------------------------------------------------------------ helpers
     def _configured_channel_ids(self) -> set[str]:
@@ -148,39 +150,100 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not selected:
                 errors["base"] = "no_selection"
             else:
-                channels_data: dict[str, dict] = {}
+                read_ok: dict[str, str] = {}
+                fallback: list[str] = []
                 limited: list[str] = []
-                try:
-                    for channel_id in selected:
+                for channel_id in selected:
+                    cid = str(channel_id)
+                    read_key = None
+                    is_limited = False
+                    try:
                         read_key, is_limited = await api.async_provision_read_key(
-                            self.hass, self._account_key, str(channel_id)
+                            self.hass, self._account_key, cid
                         )
-                        channels_data[str(channel_id)] = {CONF_READ_KEY: read_key}
+                        # Read-Key erst prüfen, bevor er gespeichert wird.
+                        await api.async_validate_read_key(self.hass, read_key, cid)
+                    except api.UbibotError:
+                        read_key = None
+                    if read_key:
+                        read_ok[cid] = read_key
                         if is_limited:
-                            limited.append(str(channel_id))
-                except api.UbibotError:
+                            limited.append(cid)
+                    else:
+                        # Kein funktionierender Read-Key -> geht der Account-Key-Abruf?
+                        try:
+                            await api.async_validate_account_key(
+                                self.hass, self._account_key, cid
+                            )
+                            fallback.append(cid)
+                        except api.UbibotError:
+                            pass  # dieser Kanal geht gar nicht -> überspringen
+
+                if not read_ok and not fallback:
                     errors["base"] = "cannot_connect"
                 else:
-                    # Account-Key nicht mehr benötigt -> verwerfen.
-                    self._account_key = None
-                    title = (
-                        f"UbiBot ({len(channels_data)} Geräte)"
-                        if len(channels_data) > 1
-                        else f"UbiBot {next(iter(channels_data))}"
-                    )
-                    data = {CONF_CHANNELS: channels_data}
-                    if limited:
-                        # Hinweis-Schritt anzeigen, dann Eintrag erstellen.
-                        self._pending_entry = (title, data)  # type: ignore[attr-defined]
-                        self._limited_channels = limited  # type: ignore[attr-defined]
-                        return await self.async_step_limited()
-                    return self.async_create_entry(title=title, data=data)
+                    self._pending_readonly = read_ok
+                    self._limited_channels = limited
+                    if fallback:
+                        # Für manche Geräte kein Read-Key -> Account-Key anbieten.
+                        self._fallback_channels = fallback
+                        return await self.async_step_select_fallback()
+                    return await self._async_finish_selection(read_ok, [], limited)
 
         options = {str(ch["channel_id"]): _channel_label(ch) for ch in available}
         schema = vol.Schema(
             {vol.Required(CONF_CHANNELS, default=[]): cv.multi_select(options)}
         )
         return self.async_show_form(step_id="select", data_schema=schema, errors=errors)
+
+    async def _async_finish_selection(
+        self, read_ok: dict[str, str], account_fallback: list[str], limited: list[str]
+    ):
+        """Config-Entry aus der Geräteauswahl erstellen (Read-Keys + optional
+        Account-Key-Fallback für einzelne Kanäle)."""
+        channels_data: dict[str, dict] = {
+            cid: {CONF_READ_KEY: read_key} for cid, read_key in read_ok.items()
+        }
+        for cid in account_fallback:
+            channels_data[cid] = {CONF_ACCOUNT_KEY: self._account_key}
+
+        if not channels_data:
+            return self.async_abort(reason="cancelled")
+
+        if not account_fallback:
+            # Account-Key nicht mehr benötigt -> verwerfen.
+            self._account_key = None
+
+        title = (
+            f"UbiBot ({len(channels_data)} Geräte)"
+            if len(channels_data) > 1
+            else f"UbiBot {next(iter(channels_data))}"
+        )
+        data = {CONF_CHANNELS: channels_data}
+        if limited:
+            self._pending_entry = (title, data)
+            return await self.async_step_limited()
+        return self.async_create_entry(title=title, data=data)
+
+    async def async_step_select_fallback(self, user_input=None):
+        """Für einige gewählte Geräte war kein funktionierender Read-Key möglich."""
+        return self.async_show_menu(
+            step_id="select_fallback",
+            menu_options=["use_account_key_multi", "add_read_key_only"],
+            description_placeholders={"channels": ", ".join(self._fallback_channels)},
+        )
+
+    async def async_step_use_account_key_multi(self, user_input=None):
+        """Für die betroffenen Geräte bewusst den Account-Key nutzen (unsicherer)."""
+        return await self._async_finish_selection(
+            self._pending_readonly, self._fallback_channels, self._limited_channels
+        )
+
+    async def async_step_add_read_key_only(self, user_input=None):
+        """Nur die Geräte hinzufügen, die einen funktionierenden Read-Key haben."""
+        return await self._async_finish_selection(
+            self._pending_readonly, [], self._limited_channels
+        )
 
     async def async_step_limited(self, user_input=None):
         """Hinweis, dass bei manchen Geräten das Read-Key-Limit erreicht war."""

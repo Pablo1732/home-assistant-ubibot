@@ -39,6 +39,14 @@
           "cancel_setup": "Cancel"
         }
       },
+      "select_fallback": {
+        "title": "Some devices need the Account Key",
+        "description": "For these devices a working read key could not be set up: {channels}. Their data can still be fetched using your Account Key (less secure). What should happen?",
+        "menu_options": {
+          "use_account_key_multi": "Use the Account Key for those (less secure)",
+          "add_read_key_only": "Add only the devices that got a read key"
+        }
+      },
       "reauth_confirm": {
         "title": "UbiBot – update credentials",
         "description": "The key for {channels} is no longer valid. Enter a new Account Key (recommended) or, for a single device, a new Read Key.",

@@ -19,7 +19,9 @@ Alle wichtigen Änderungen an dieser Integration werden hier dokumentiert.
   detected, a read key is created for that device, and you get a hint that the
   Channel ID wasn't needed (with the option to pick all your devices instead).
   If a read key can't be set up but the Account Key can fetch data, you're
-  offered to continue with the Account Key (less secure).
+  offered to continue with the Account Key (less secure). The device picker
+  offers the same fallback per device, and now validates each read key before
+  storing it.
 - No duplicate entities: the import skips devices that are already added, in any
   order.
 
@@ -36,7 +38,8 @@ Alle wichtigen Änderungen an dieser Integration werden hier dokumentiert.
   erkannt, ein Read-Key für das Gerät wird erstellt, plus Hinweis, dass die
   Channel-ID nicht nötig war (mit Option, stattdessen alle Geräte auszuwählen).
   Klappt kein Read-Key, aber der Account-Key-Abruf, wird angeboten, mit dem
-  Account-Key fortzufahren (unsicherer).
+  Account-Key fortzufahren (unsicherer). Der Geräte-Picker bietet denselben
+  Fallback pro Gerät und prüft jeden Read-Key jetzt vor dem Speichern.
 - Keine doppelten Entitäten: Der Import überspringt bereits hinzugefügte Geräte,
   egal in welcher Reihenfolge.
 
