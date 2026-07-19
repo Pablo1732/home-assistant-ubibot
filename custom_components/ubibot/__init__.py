@@ -5,6 +5,7 @@ import json
 import logging
 from datetime import timedelta
 from typing import Any
+from urllib.parse import quote
 
 import aiohttp
 
@@ -50,12 +51,15 @@ class UbibotCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Daten asynchron von der Ubibot API abrufen."""
         session = async_get_clientsession(self._hass)
+        channel_path = quote(str(self._channel), safe="")
         if self._api_key:
             # Account-Key Endpoint (nur migrierte Alt-Einträge)
-            url = f"{ACCOUNT_DATA_BASE}/channels/{self._channel}?account_key={self._api_key}"
+            url = f"{ACCOUNT_DATA_BASE}/channels/{channel_path}"
+            params = {"account_key": self._api_key}
         elif self._read_key:
             # Read-Key Endpoint benötigt webapi und Parameter api_key
-            url = f"{API_BASE}/channels/{self._channel}?api_key={self._read_key}"
+            url = f"{API_BASE}/channels/{channel_path}"
+            params = {"api_key": self._read_key}
         else:
             # Kein Schlüssel hinterlegt -> HA bietet Reauth (neuen Schlüssel eingeben) an
             raise ConfigEntryAuthFailed("Missing credentials: api_key or read_key")
@@ -65,7 +69,7 @@ class UbibotCoordinator(DataUpdateCoordinator):
 
         timeout = aiohttp.ClientTimeout(total=20)
         try:
-            async with session.get(url, timeout=timeout) as resp:
+            async with session.get(url, params=params, timeout=timeout) as resp:
                 # Falsche/abgelaufene Keys -> Reauth-Dialog statt endloser Wiederholungen
                 if resp.status in (401, 403):
                     raise ConfigEntryAuthFailed(f"Authentication failed (HTTP {resp.status})")

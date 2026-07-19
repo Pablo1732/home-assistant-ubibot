@@ -115,15 +115,24 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Geräteauswahl (nur Account-Key-Weg)."""
         errors: dict[str, str] = {}
         configured = self._configured_channel_ids()
+        # Nur Kanäle mit gültiger ID, die noch nicht eingerichtet sind.
         available = [
-            ch for ch in self._channels if str(ch.get("channel_id")) not in configured
+            ch
+            for ch in self._channels
+            if ch.get("channel_id") and str(ch["channel_id"]) not in configured
         ]
 
         if not available:
             return self.async_abort(reason="no_new_devices")
 
+        available_ids = {str(ch["channel_id"]) for ch in available}
+
         if user_input is not None:
-            selected = user_input.get(CONF_CHANNELS) or []
+            # Nur (noch) verfügbare Auswahl übernehmen -> schützt vor Doppel-Anlage,
+            # falls parallel ein zweiter Setup-Dialog dasselbe Gerät hinzugefügt hat.
+            selected = [
+                c for c in (user_input.get(CONF_CHANNELS) or []) if c in available_ids
+            ]
             if not selected:
                 errors["base"] = "no_selection"
             else:

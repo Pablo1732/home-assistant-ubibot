@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from urllib.parse import quote
 
 import aiohttp
 
@@ -29,10 +30,24 @@ class UbibotAuthError(UbibotError):
     """Ungültiger Schlüssel (HTTP 401/403)."""
 
 
-async def _request_json(session: aiohttp.ClientSession, url: str, method: str = "GET") -> dict:
-    """HTTP-Request ausführen und JSON zurückgeben; Fehler sauber übersetzen."""
+def _channel_path(channel_id: str) -> str:
+    """URL-Pfad für einen Kanal – Channel-ID sicher kodieren (gegen Fehleingaben)."""
+    return f"{API_BASE}/channels/{quote(str(channel_id), safe='')}"
+
+
+async def _request_json(
+    session: aiohttp.ClientSession,
+    url: str,
+    method: str = "GET",
+    params: dict | None = None,
+) -> dict:
+    """HTTP-Request ausführen und JSON zurückgeben; Fehler sauber übersetzen.
+
+    Query-Parameter werden über ``params`` übergeben (aiohttp kodiert sie sauber),
+    damit Sonderzeichen in Schlüsseln/IDs die Anfrage nicht zerlegen.
+    """
     try:
-        async with session.request(method, url, timeout=_TIMEOUT) as resp:
+        async with session.request(method, url, params=params, timeout=_TIMEOUT) as resp:
             if resp.status in (401, 403):
                 raise UbibotAuthError(f"HTTP {resp.status}")
             if resp.status != 200:
@@ -48,7 +63,9 @@ async def _request_json(session: aiohttp.ClientSession, url: str, method: str = 
 async def async_list_channels(hass: HomeAssistant, account_key: str) -> list[dict]:
     """Alle Kanäle eines Accounts auflisten (nur mit Account-Key möglich)."""
     session = async_get_clientsession(hass)
-    data = await _request_json(session, f"{API_BASE}/channels?account_key={account_key}")
+    data = await _request_json(
+        session, f"{API_BASE}/channels", params={"account_key": account_key}
+    )
     channels = data.get("channels")
     if not isinstance(channels, list):
         raise UbibotError("Unexpected response: no channels list")
@@ -58,7 +75,7 @@ async def async_list_channels(hass: HomeAssistant, account_key: str) -> list[dic
 async def async_validate_read_key(hass: HomeAssistant, read_key: str, channel_id: str) -> None:
     """Read-Key gegen einen Kanal prüfen (wirft bei ungültig/nicht erreichbar)."""
     session = async_get_clientsession(hass)
-    await _request_json(session, f"{API_BASE}/channels/{channel_id}?api_key={read_key}")
+    await _request_json(session, _channel_path(channel_id), params={"api_key": read_key})
 
 
 async def async_provision_read_key(
@@ -75,9 +92,11 @@ async def async_provision_read_key(
     Limits ein bestehender (fremder) Schlüssel genutzt werden musste.
     """
     session = async_get_clientsession(hass)
-    base = f"{API_BASE}/channels/{channel_id}/api_keys"
+    base = f"{_channel_path(channel_id)}/api_keys"
 
-    data = await _request_json(session, f"{base}?action=list&account_key={account_key}")
+    data = await _request_json(
+        session, base, params={"action": "list", "account_key": account_key}
+    )
     read_keys = data.get("read_keys") or []
 
     # 1) vorhandenen HA-Read-Key wiederverwenden
@@ -90,8 +109,13 @@ async def async_provision_read_key(
     if len(read_keys) < MAX_READ_KEYS:
         gen = await _request_json(
             session,
-            f"{base}?action=generate_read_key&note={READ_KEY_NOTE}&account_key={account_key}",
+            base,
             method="POST",
+            params={
+                "action": "generate_read_key",
+                "note": READ_KEY_NOTE,
+                "account_key": account_key,
+            },
         )
         read_key = gen.get("read_key")
         if not read_key:
