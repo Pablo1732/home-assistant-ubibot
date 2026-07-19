@@ -46,10 +46,10 @@ SENSOR_TYPES = {
         "field": "field5",
         "category": "diagnostic",
     },
-    "battery_voltage": {
+    "voltage": {
         "class": "voltage",
         "unit": "V",
-        "icon": "mdi:battery",
+        "icon": "mdi:flash-outline",
         "field": "field4",
         "category": "diagnostic",
     },

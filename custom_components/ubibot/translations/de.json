@@ -60,7 +60,7 @@
       "humidity": {"name": "Luftfeuchtigkeit"},
       "lux": {"name": "Beleuchtungsstärke"},
       "wifi_rssi": {"name": "WLAN-Signal"},
-      "battery_voltage": {"name": "Batteriespannung"},
+      "voltage": {"name": "Spannung"},
       "temperature_external": {"name": "Externe Temperatur"}
     }
   }

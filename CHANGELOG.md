@@ -19,7 +19,7 @@ First polished release. / Erste ausgereifte Version.
 - 🔒 **Your Account Key is never stored.** It’s used only to look up your devices
   and fetch a read-only key for each one, then it’s discarded. Home Assistant
   only ever keeps the harmless read keys.
-- 🔋 **Battery sensor** – shows the WS1 supply voltage.
+- ⚡ **Voltage sensor** – shows the WS1 supply voltage (USB or battery).
 - 🔌 **Offline detection** – when UbiBot reports the device as offline, its
   sensors become *unavailable* instead of getting stuck on the last value.
 - 🩺 **Download diagnostics** – a support file you can download from the device
@@ -36,7 +36,7 @@ First polished release. / Erste ausgereifte Version.
 - 💪 **More reliable** – no internet, timeouts, wrong keys or unexpected
   responses no longer crash the integration; sensors go unavailable and recover
   on their own.
-- 📉 WiFi signal and battery are grouped under *Diagnostic* so they don’t clutter
+- 📉 WiFi signal and voltage are grouped under *Diagnostic* so they don’t clutter
   the main view.
 
 **Requirements**
@@ -52,7 +52,7 @@ First polished release. / Erste ausgereifte Version.
 - 🔒 **Dein Account-Key wird nie gespeichert.** Er wird nur benutzt, um deine
   Geräte abzufragen und pro Gerät einen Nur-Lese-Schlüssel zu holen, danach wird
   er verworfen. In Home Assistant liegen ausschließlich die harmlosen Read-Keys.
-- 🔋 **Batterie-Sensor** – zeigt die Versorgungsspannung des WS1.
+- ⚡ **Spannungs-Sensor** – zeigt die Versorgungsspannung des WS1 (USB oder Batterie).
 - 🔌 **Offline-Erkennung** – wenn UbiBot das Gerät als offline meldet, werden die
   Sensoren *nicht verfügbar*, statt am letzten Wert hängenzubleiben.
 - 🩺 **Diagnose herunterladen** – eine Support-Datei, die du auf der Geräteseite
@@ -71,7 +71,7 @@ First polished release. / Erste ausgereifte Version.
 - 💪 **Zuverlässiger** – kein Internet, Zeitüberschreitungen, falsche Schlüssel
   oder unerwartete Antworten bringen die Integration nicht mehr zum Absturz; die
   Sensoren werden nicht verfügbar und erholen sich von selbst.
-- 📉 WLAN-Signal und Batterie sind unter *Diagnose* gruppiert, damit sie die
+- 📉 WLAN-Signal und Spannung sind unter *Diagnose* gruppiert, damit sie die
   Hauptansicht nicht zumüllen.
 
 **Voraussetzungen**

@@ -1,6 +1,6 @@
 # UbiBot for Home Assistant
 
-Bring your **UbiBot** sensor readings (temperature, humidity, light, battery and
+Bring your **UbiBot** sensor readings (temperature, humidity, light, voltage and
 more) straight into Home Assistant.
 
 **🌐 [English](#english) · [Deutsch](#deutsch)**
@@ -23,7 +23,7 @@ these sensors (only the ones your device actually provides will appear):
 | 💡 Illuminance | Light level |
 | 🌡️ External temperature | Only if a probe is connected |
 | 📶 WiFi signal | Signal strength *(Diagnostic)* |
-| 🔋 Battery voltage | Supply voltage *(Diagnostic)* |
+| ⚡ Voltage | Supply voltage – USB or battery *(Diagnostic)* |
 
 When your device goes **offline**, its sensors automatically show as
 *unavailable* – so you never look at a stale value and think it’s current.
@@ -117,9 +117,9 @@ integration.
 </details>
 
 <details>
-<summary><b>The battery sensor is missing</b></summary>
+<summary><b>The voltage sensor is missing</b></summary>
 
-Some setups don’t report the voltage field. The battery sensor only appears
+Some setups don’t report the voltage field. The voltage sensor only appears
 when your device actually sends that value.
 </details>
 
@@ -158,7 +158,7 @@ mit diesen Sensoren (es tauchen nur die auf, die dein Gerät tatsächlich liefer
 | 💡 Beleuchtungsstärke | Helligkeit |
 | 🌡️ Externe Temperatur | Nur wenn eine Sonde angeschlossen ist |
 | 📶 WLAN-Signal | Signalstärke *(Diagnose)* |
-| 🔋 Batteriespannung | Versorgungsspannung *(Diagnose)* |
+| ⚡ Spannung | Versorgungsspannung – USB oder Batterie *(Diagnose)* |
 
 Wenn dein Gerät **offline** geht, werden seine Sensoren automatisch als
 *nicht verfügbar* angezeigt – du siehst also nie einen alten Wert und hältst ihn
@@ -257,9 +257,9 @@ fertig. Ein Entfernen und Neu-Hinzufügen ist nicht nötig.
 </details>
 
 <details>
-<summary><b>Der Batterie-Sensor fehlt</b></summary>
+<summary><b>Der Spannungs-Sensor fehlt</b></summary>
 
-Manche Geräte melden den Spannungswert nicht. Der Batterie-Sensor erscheint nur,
+Manche Geräte melden den Spannungswert nicht. Der Spannungs-Sensor erscheint nur,
 wenn dein Gerät diesen Wert auch sendet.
 </details>
 
