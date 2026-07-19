@@ -100,6 +100,16 @@ added yet will be offered. You can’t add the same device twice.
 </details>
 
 <details>
+<summary><b>I'm coming from the old YAML version (ms32035)</b></summary>
+
+Nothing to do manually – on the first start your old `sensor: - platform: ubibot`
+configuration is **imported automatically**. Your entities, history and device
+(area, name) are kept. You'll get a repair notice reminding you to remove the
+`- platform: ubibot` block from your `configuration.yaml` and restart; after that
+you can dismiss the notice.
+</details>
+
+<details>
 <summary><b>My sensors show “unavailable”</b></summary>
 
 This is expected when your **device is offline** (out of power, no WiFi, or
@@ -237,6 +247,17 @@ Empfehlung: `300` (5 Minuten).
 Füge die Integration einfach nochmal mit deinem Account-Key hinzu – es werden
 nur Geräte angeboten, die du noch nicht hinzugefügt hast. Dasselbe Gerät kann
 nicht doppelt hinzugefügt werden.
+</details>
+
+<details>
+<summary><b>Ich komme von der alten YAML-Version (ms32035)</b></summary>
+
+Du musst nichts von Hand machen – beim ersten Start wird deine alte
+`sensor: - platform: ubibot`-Konfiguration **automatisch importiert**. Entitäten,
+Verlauf und Gerät (Area, Name) bleiben erhalten. Du bekommst eine
+Reparatur-Meldung, die dich erinnert, den `- platform: ubibot`-Block aus deiner
+`configuration.yaml` zu entfernen und neu zu starten; danach kannst du die
+Meldung schließen.
 </details>
 
 <details>

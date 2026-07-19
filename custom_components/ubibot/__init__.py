@@ -12,6 +12,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.const import CONF_API_KEY
@@ -158,10 +159,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not any(c.last_update_success for c in coordinators.values()):
         raise ConfigEntryNotReady("Initial refresh failed for all Ubibot channels")
 
+    # Alt-Gerät (ms32035: Identifier = Seriennummer) auf die neue Channel-ID-Kennung
+    # umschreiben, damit Area/Name/Geräte-Kachel beim Umstieg erhalten bleiben.
+    for channel_id, coordinator in coordinators.items():
+        _migrate_legacy_device(hass, entry, channel_id, coordinator)
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"coordinators": coordinators}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+def _migrate_legacy_device(
+    hass: HomeAssistant, entry: ConfigEntry, channel_id: str, coordinator: "UbibotCoordinator"
+) -> None:
+    """Altes Gerät (Seriennummer-Kennung) auf die Channel-ID-Kennung umschreiben.
+
+    Erhält Area-Zuordnung, eigenen Gerätenamen und Entitäten beim Umstieg von der
+    alten YAML-Integration (ms32035). No-op für frische Installs / 1.0.0-Nutzer.
+    """
+    channel = (coordinator.data or {}).get("channel", {})
+    full_serial = channel.get("full_serial")
+    if not full_serial:
+        return
+
+    registry = dr.async_get(hass)
+    new_identifier = (DOMAIN, str(channel_id))
+    # Gibt es schon ein Gerät mit der neuen Kennung? Dann nichts umschreiben.
+    if registry.async_get_device(identifiers={new_identifier}):
+        return
+    old_device = registry.async_get_device(identifiers={(DOMAIN, full_serial)})
+    if old_device is None:
+        return
+
+    registry.async_update_device(
+        old_device.id,
+        new_identifiers={new_identifier},
+        add_config_entry_id=entry.entry_id,
+    )
+    _LOGGER.info(
+        "Ubibot: migrated legacy device (serial %s) to channel-id identifier %s",
+        full_serial,
+        channel_id,
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

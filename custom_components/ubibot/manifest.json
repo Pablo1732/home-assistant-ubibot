@@ -3,8 +3,11 @@
   "name": "Ubibot",
   "documentation": "https://github.com/Pablo1732/home-assistant-ubibot",
   "requirements": [],
-  "codeowners": ["@ms32035", "@Pablo1732"],
+  "codeowners": [
+    "@ms32035",
+    "@Pablo1732"
+  ],
   "iot_class": "cloud_polling",
   "config_flow": true,
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

@@ -5,6 +5,27 @@ Alle wichtigen Änderungen an dieser Integration werden hier dokumentiert.
 
 ---
 
+## [1.1.0] – 2026-07-19
+
+### 🇬🇧 English
+- 🔄 **Automatic migration from the old YAML integration** (ms32035). If you still
+  have a `sensor: - platform: ubibot` block, it is imported into a UI entry
+  automatically — **your entities, history and device (area, name) are kept**.
+  A repair notice reminds you to remove the YAML block afterwards.
+- No duplicate entities: the import skips devices that are already added, in any
+  order.
+
+### 🇩🇪 Deutsch
+- 🔄 **Automatische Migration von der alten YAML-Integration** (ms32035). Wenn du
+  noch einen `sensor: - platform: ubibot`-Block hast, wird er automatisch in
+  einen UI-Eintrag importiert — **Entitäten, Verlauf und Gerät (Area, Name)
+  bleiben erhalten**. Eine Reparatur-Meldung erinnert dich, den YAML-Block danach
+  zu entfernen.
+- Keine doppelten Entitäten: Der Import überspringt bereits hinzugefügte Geräte,
+  egal in welcher Reihenfolge.
+
+---
+
 ## [1.0.0] – 2026-07-19
 
 First polished release. / Erste ausgereifte Version.

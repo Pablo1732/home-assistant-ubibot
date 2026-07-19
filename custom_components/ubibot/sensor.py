@@ -6,13 +6,39 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EntityCategory
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import SENSOR_TYPES, MODELS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import der alten YAML-Konfiguration (`sensor: - platform: ubibot`).
+
+    Legt keine Sensoren direkt an (das macht der Config-Entry), sondern überführt
+    die YAML-Daten per Import in einen Eintrag und weist per Reparatur-Meldung
+    darauf hin, den YAML-Block zu entfernen. Doppelte Anlage wird im Import
+    verhindert -> keine doppelten Entitäten, egal in welcher Reihenfolge.
+    """
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_import",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_import",
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+        )
+    )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

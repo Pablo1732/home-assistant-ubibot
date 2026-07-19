@@ -23,6 +23,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import api
 from .const import (
+    CONF_ACCOUNT_KEY,
     CONF_CHANNEL,
     CONF_CHANNELS,
     CONF_READ_KEY,
@@ -184,8 +185,33 @@ class UbibotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, user_input=None):
-        return await self.async_step_user(user_input)
+    async def async_step_import(self, import_data):
+        """YAML-Import der Alt-Integration (ms32035: sensor: - platform: ubibot).
+
+        Der alte api_key ist ein Account-Key -> wird direkt gespeichert (kein
+        API-Call beim Booten -> zuverlässig). Bereits konfigurierte Kanäle werden
+        übersprungen, damit keine Duplikate entstehen.
+        """
+        channel = str(import_data.get(CONF_CHANNEL) or "").strip()
+        api_key = import_data.get(CONF_API_KEY)
+        if not channel or not api_key:
+            return self.async_abort(reason="invalid_import")
+        if channel in self._configured_channel_ids():
+            return self.async_abort(reason="already_configured")
+
+        scan_interval = import_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        try:
+            scan_interval = int(scan_interval)
+        except (TypeError, ValueError):
+            scan_interval = DEFAULT_SCAN_INTERVAL
+
+        return self.async_create_entry(
+            title=f"UbiBot {channel}",
+            data={
+                CONF_CHANNELS: {channel: {CONF_ACCOUNT_KEY: api_key}},
+                CONF_SCAN_INTERVAL: scan_interval,
+            },
+        )
 
     # ------------------------------------------------------------------- reauth
     async def async_step_reauth(self, entry_data):

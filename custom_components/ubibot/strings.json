@@ -41,7 +41,15 @@
     },
     "abort": {
       "no_new_devices": "All your UbiBot devices are already added.",
-      "reauth_successful": "Credentials updated successfully."
+      "reauth_successful": "Credentials updated successfully.",
+      "already_configured": "This device is already added.",
+      "invalid_import": "Could not import the old YAML configuration (missing channel or key)."
+    }
+  },
+  "issues": {
+    "yaml_import": {
+      "title": "UbiBot YAML configuration is deprecated",
+      "description": "Your UbiBot `sensor:` YAML configuration has been imported into a UI entry — your entities and history are kept. Please remove the `- platform: ubibot` block from your configuration.yaml and restart Home Assistant. Afterwards you can dismiss this notice."
     }
   },
   "options": {

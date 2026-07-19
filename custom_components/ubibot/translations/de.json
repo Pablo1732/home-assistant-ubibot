@@ -41,7 +41,15 @@
     },
     "abort": {
       "no_new_devices": "Alle deine UbiBot-Geräte sind bereits hinzugefügt.",
-      "reauth_successful": "Zugangsdaten erfolgreich aktualisiert."
+      "reauth_successful": "Zugangsdaten erfolgreich aktualisiert.",
+      "already_configured": "Dieses Gerät ist bereits hinzugefügt.",
+      "invalid_import": "Die alte YAML-Konfiguration konnte nicht importiert werden (Channel-ID oder Schlüssel fehlt)."
+    }
+  },
+  "issues": {
+    "yaml_import": {
+      "title": "UbiBot YAML-Konfiguration ist veraltet",
+      "description": "Deine UbiBot-`sensor:`-YAML-Konfiguration wurde in einen UI-Eintrag importiert – Entitäten und Verlauf bleiben erhalten. Bitte entferne den `- platform: ubibot`-Block aus deiner configuration.yaml und starte Home Assistant neu. Danach kannst du diese Meldung schließen."
     }
   },
   "options": {
